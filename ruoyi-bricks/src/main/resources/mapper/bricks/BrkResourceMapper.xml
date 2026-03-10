@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.bricks.mapper.BrkResourceMapper">
+    
+    <resultMap type="BrkResource" id="BrkResourceResult">
+        <result property="resourceId"    column="resource_id"    />
+        <result property="type"    column="type"    />
+        <result property="originId"    column="origin_id"    />
+        <result property="originUrl"    column="origin_url"    />
+        <result property="data"    column="data"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectBrkResourceVo">
+        select resource_id, type, origin_id, origin_url, data, create_by, create_time, update_by, update_time from brk_resource
+    </sql>
+
+    <select id="selectBrkResourceList" parameterType="BrkResource" resultMap="BrkResourceResult">
+        <include refid="selectBrkResourceVo"/>
+        <where>  
+            <if test="type != null  and type != ''"> and type = #{type}</if>
+            <if test="originId != null  and originId != ''"> and origin_id = #{originId}</if>
+            <if test="originUrl != null  and originUrl != ''"> and origin_url = #{originUrl}</if>
+            <if test="data != null  and data != ''"> and data = #{data}</if>
+        </where>
+    </select>
+    
+    <select id="selectBrkResourceByResourceId" parameterType="Long" resultMap="BrkResourceResult">
+        <include refid="selectBrkResourceVo"/>
+        where resource_id = #{resourceId}
+    </select>
+
+    <insert id="insertBrkResource" parameterType="BrkResource" useGeneratedKeys="true" keyProperty="resourceId">
+        insert into brk_resource
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="type != null and type != ''">type,</if>
+            <if test="originId != null and originId != ''">origin_id,</if>
+            <if test="originUrl != null and originUrl != ''">origin_url,</if>
+            <if test="data != null">data,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="type != null and type != ''">#{type},</if>
+            <if test="originId != null and originId != ''">#{originId},</if>
+            <if test="originUrl != null and originUrl != ''">#{originUrl},</if>
+            <if test="data != null">#{data},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateBrkResource" parameterType="BrkResource">
+        update brk_resource
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="type != null and type != ''">type = #{type},</if>
+            <if test="originId != null and originId != ''">origin_id = #{originId},</if>
+            <if test="originUrl != null and originUrl != ''">origin_url = #{originUrl},</if>
+            <if test="data != null">data = #{data},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where resource_id = #{resourceId}
+    </update>
+
+    <delete id="deleteBrkResourceByResourceId" parameterType="Long">
+        delete from brk_resource where resource_id = #{resourceId}
+    </delete>
+
+    <delete id="deleteBrkResourceByResourceIds" parameterType="String">
+        delete from brk_resource where resource_id in 
+        <foreach item="resourceId" collection="array" open="(" separator="," close=")">
+            #{resourceId}
+        </foreach>
+    </delete>
+</mapper>
