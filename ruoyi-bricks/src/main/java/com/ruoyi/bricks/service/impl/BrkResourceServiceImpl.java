@@ -144,7 +144,7 @@ public class BrkResourceServiceImpl implements IBrkResourceService
 
             LibraryInfo libraryInfo = JSON.parseObject(jsonContent, LibraryInfo.class);
 
-            if (libraryInfo.getConfig() != null && libraryInfo.getConfig().getAssetInfo() != null)
+            if (libraryInfo.getTabsV2() != null && libraryInfo.getTabsV2().getLabels() != null)
             {
                 saveResourceImages(libraryInfo);
             }
@@ -160,7 +160,7 @@ public class BrkResourceServiceImpl implements IBrkResourceService
     }
 
     /**
-     * Save eye images from library asset_info to database
+     * Save eye images from tabs_v2/labels[name=表情]/labels/assets to database
      *
      * @param libraryInfo Library configuration object
      */
@@ -171,21 +171,57 @@ public class BrkResourceServiceImpl implements IBrkResourceService
             int insertCount = 0;
             int updateCount = 0;
             int skipCount = 0;
-            for (Map.Entry<String, LibraryInfo.AssetInfo> entry : libraryInfo.getConfig().getAssetInfo().entrySet())
-            {
-                String url = entry.getKey();
-                LibraryInfo.AssetInfo assetInfo = entry.getValue();
 
-                if ("眼睛".equals(assetInfo.getType()) || "眉毛".equals(assetInfo.getType()) || "眼镜".equals(assetInfo.getType()) || "衣服贴纸".equals(assetInfo.getType())
-                        || "嘴巴".equals(assetInfo.getType()) || "贴纸".equals(assetInfo.getType()))
+            if (libraryInfo.getTabsV2() == null || libraryInfo.getTabsV2().getLabels() == null)
+            {
+                log.warn("No tabs_v2 found in library JSON");
+                return;
+            }
+
+            LibraryInfo.TabLabel expressionLabel = null;
+            for (LibraryInfo.TabLabel label : libraryInfo.getTabsV2().getLabels())
+            {
+                if ("表情".equals(label.getName()))
                 {
-                    log.info("Processing asset: {}", url);
-                    ResourceData resourceData = downloadAndParseResourceJson(url);
+                    expressionLabel = label;
+                    break;
+                }
+            }
+
+            if (expressionLabel == null)
+            {
+                log.warn("No label with name='表情' found in tabs_v2");
+                return;
+            }
+
+            if (expressionLabel.getLabels() == null)
+            {
+                log.warn("No sub-labels found under '表情' label");
+                return;
+            }
+
+            for (LibraryInfo.TabLabel subLabel : expressionLabel.getLabels())
+            {
+                if ("推荐".equals(subLabel.getName()))
+                {
+                    log.info("Skipping '推荐' label");
+                    continue;
+                }
+
+                if (subLabel.getAssets() == null || subLabel.getAssets().isEmpty())
+                {
+                    continue;
+                }
+
+                for (String assetUrl : subLabel.getAssets())
+                {
+                    log.info("Processing asset: {}", assetUrl);
+                    ResourceData resourceData = downloadAndParseResourceJson(assetUrl);
 
                     if (resourceData != null && resourceData.getData() != null && resourceData.getData().getTexture() != null)
                     {
                         String imageData = resourceData.getData().getTexture().getImage();
-                        String originId = url.substring(url.lastIndexOf("/") + 1);
+                        String originId = assetUrl.substring(assetUrl.lastIndexOf("/") + 1);
                         String type = resourceData.getType();
 
                         if (imageData != null && !imageData.isEmpty())
@@ -216,7 +252,7 @@ public class BrkResourceServiceImpl implements IBrkResourceService
                                 BrkResource resource = new BrkResource();
                                 resource.setType(type);
                                 resource.setOriginId(originId);
-                                resource.setOriginUrl(url);
+                                resource.setOriginUrl(assetUrl);
                                 resource.setData(imageData);
 
                                 brkResourceMapper.insertBrkResource(resource);
@@ -227,6 +263,7 @@ public class BrkResourceServiceImpl implements IBrkResourceService
                     }
                 }
             }
+
             log.info("Total processed - Insert: {}, Update: {}, Skip: {}", insertCount, updateCount, skipCount);
         }
         catch (Exception e)
@@ -239,7 +276,7 @@ public class BrkResourceServiceImpl implements IBrkResourceService
      * Download and parse resource JSON file
      *
      * @param url URL to download
-     * @return ResourceData object
+     * @return ResourceData object or null if failed
      */
     private ResourceData downloadAndParseResourceJson(String url)
     {
@@ -251,7 +288,7 @@ public class BrkResourceServiceImpl implements IBrkResourceService
             connection = (HttpURLConnection) httpUrl.openConnection();
             connection.setRequestMethod("GET");
             connection.setConnectTimeout(10000);
-            connection.setReadTimeout(10000);
+            connection.setReadTimeout(30000);
             connection.setRequestProperty("User-Agent", "Mozilla/5.0");
 
             int responseCode = connection.getResponseCode();
@@ -260,18 +297,31 @@ public class BrkResourceServiceImpl implements IBrkResourceService
                 inputStream = connection.getInputStream();
                 String response = readInputStream(inputStream);
 
-                ResourceData resourceData = JSON.parseObject(response, ResourceData.class);
-                log.debug("Parsed resource JSON from URL: {}", url);
-                return resourceData;
+                if (response == null || response.trim().isEmpty())
+                {
+                    log.warn("Empty response from URL: {}", url);
+                    return null;
+                }
+
+                String trimmed = response.trim();
+                if (!trimmed.startsWith("{") && !trimmed.startsWith("["))
+                {
+                    log.warn("Response is not valid JSON from URL: {}", url);
+                    return null;
+                }
+
+                return JSON.parseObject(response, ResourceData.class);
             }
             else
             {
-                log.warn("HTTP response code {} for URL: {}", responseCode, url);
+                log.warn("HTTP error {} from URL: {}", responseCode, url);
+                return null;
             }
         }
         catch (Exception e)
         {
             log.error("Failed to download and parse resource JSON from URL: {}", url, e);
+            return null;
         }
         finally
         {
@@ -291,7 +341,6 @@ public class BrkResourceServiceImpl implements IBrkResourceService
                 connection.disconnect();
             }
         }
-        return null;
     }
 
     /**

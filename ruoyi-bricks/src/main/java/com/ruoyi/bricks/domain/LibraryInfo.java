@@ -23,6 +23,10 @@ public class LibraryInfo
     /** Configuration */
     private Config config;
 
+    /** Tabs v2 */
+    @JSONField(name = "tabs_v2")
+    private TabsV2 tabsV2;
+
     public String getAssetBase()
     {
         return assetBase;
@@ -51,6 +55,80 @@ public class LibraryInfo
     public void setConfig(Config config)
     {
         this.config = config;
+    }
+
+    public TabsV2 getTabsV2()
+    {
+        return tabsV2;
+    }
+
+    public void setTabsV2(TabsV2 tabsV2)
+    {
+        this.tabsV2 = tabsV2;
+    }
+
+    /**
+     * Tabs v2 domain object
+     */
+    public static class TabsV2
+    {
+        /** Labels list */
+        private List<TabLabel> labels;
+
+        public List<TabLabel> getLabels()
+        {
+            return labels;
+        }
+
+        public void setLabels(List<TabLabel> labels)
+        {
+            this.labels = labels;
+        }
+    }
+
+    /**
+     * Tab label domain object
+     */
+    public static class TabLabel
+    {
+        /** Label name */
+        private String name;
+
+        /** Sub labels */
+        private List<TabLabel> labels;
+
+        /** Assets */
+        private List<String> assets;
+
+        public String getName()
+        {
+            return name;
+        }
+
+        public void setName(String name)
+        {
+            this.name = name;
+        }
+
+        public List<TabLabel> getLabels()
+        {
+            return labels;
+        }
+
+        public void setLabels(List<TabLabel> labels)
+        {
+            this.labels = labels;
+        }
+
+        public List<String> getAssets()
+        {
+            return assets;
+        }
+
+        public void setAssets(List<String> assets)
+        {
+            this.assets = assets;
+        }
     }
 
     /**
