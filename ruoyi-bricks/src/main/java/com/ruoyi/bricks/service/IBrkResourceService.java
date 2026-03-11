@@ -2,6 +2,7 @@ package com.ruoyi.bricks.service;
 
 import java.util.List;
 import com.ruoyi.bricks.domain.BrkResource;
+import com.ruoyi.bricks.domain.LibraryInfo;
 
 /**
  * 资源图片Service接口
@@ -58,4 +59,11 @@ public interface IBrkResourceService
      * @return 结果
      */
     public int deleteBrkResourceByResourceId(Long resourceId);
+
+    /**
+     * Parse library JSON file
+     *
+     * @return Library configuration object
+     */
+    public LibraryInfo parseLibraryJson(String url);
 }

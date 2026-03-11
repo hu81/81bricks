@@ -20,6 +20,14 @@ public interface BrkResourceMapper
     public BrkResource selectBrkResourceByResourceId(Long resourceId);
 
     /**
+     * 根据originId查询资源图片
+     *
+     * @param originId 资源originId
+     * @return 资源图片
+     */
+    public BrkResource selectBrkResourceByOriginId(String originId);
+
+    /**
      * 查询资源图片列表
      * 
      * @param brkResource 资源图片

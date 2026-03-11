@@ -17,6 +17,7 @@ import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.bricks.domain.BrkResource;
+import com.ruoyi.bricks.domain.LibraryInfo;
 import com.ruoyi.bricks.service.IBrkResourceService;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
@@ -100,5 +101,22 @@ public class BrkResourceController extends BaseController
     public AjaxResult remove(@PathVariable Long[] resourceIds)
     {
         return toAjax(brkResourceService.deleteBrkResourceByResourceIds(resourceIds));
+    }
+
+    /**
+     * Parse and return library configuration from JSON file
+     */
+    @GetMapping("/parseLibrary")
+    public AjaxResult parseLibrary(String url)
+    {
+        try
+        {
+            LibraryInfo libraryInfo = brkResourceService.parseLibraryJson(url);
+            return success(libraryInfo);
+        }
+        catch (Exception e)
+        {
+            return error("Failed to parse library: " + e.getMessage());
+        }
     }
 }

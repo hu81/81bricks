@@ -35,6 +35,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where resource_id = #{resourceId}
     </select>
 
+    <select id="selectBrkResourceByOriginId" parameterType="String" resultMap="BrkResourceResult">
+        <include refid="selectBrkResourceVo"/>
+        where origin_id = #{originId}
+    </select>
+
     <insert id="insertBrkResource" parameterType="BrkResource" useGeneratedKeys="true" keyProperty="resourceId">
         insert into brk_resource
         <trim prefix="(" suffix=")" suffixOverrides=",">
