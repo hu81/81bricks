@@ -44,8 +44,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <insert id="insertBrkFace" parameterType="BrkFace" useGeneratedKeys="true" keyProperty="faceId">
         insert into brk_face
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="originId != null and originId != ''">origin_id,</if>
-            <if test="originUrl != null and originUrl != ''">origin_url,</if>
+            <if test="originId != null">origin_id,</if>
+            <if test="originUrl != null">origin_url,</if>
             <if test="eyeOriginId != null">eye_origin_id,</if>
             <if test="monthOriginId != null">month_origin_id,</if>
             <if test="eyebrowOriginId != null">eyebrow_origin_id,</if>
@@ -57,8 +57,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="updateTime != null">update_time,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="originId != null and originId != ''">#{originId},</if>
-            <if test="originUrl != null and originUrl != ''">#{originUrl},</if>
+            <if test="originId != null">#{originId},</if>
+            <if test="originUrl != null">#{originUrl},</if>
             <if test="eyeOriginId != null">#{eyeOriginId},</if>
             <if test="monthOriginId != null">#{monthOriginId},</if>
             <if test="eyebrowOriginId != null">#{eyebrowOriginId},</if>
@@ -74,8 +74,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <update id="updateBrkFace" parameterType="BrkFace">
         update brk_face
         <trim prefix="SET" suffixOverrides=",">
-            <if test="originId != null and originId != ''">origin_id = #{originId},</if>
-            <if test="originUrl != null and originUrl != ''">origin_url = #{originUrl},</if>
+            <if test="originId != null">origin_id = #{originId},</if>
+            <if test="originUrl != null">origin_url = #{originUrl},</if>
             <if test="eyeOriginId != null">eye_origin_id = #{eyeOriginId},</if>
             <if test="monthOriginId != null">month_origin_id = #{monthOriginId},</if>
             <if test="eyebrowOriginId != null">eyebrow_origin_id = #{eyebrowOriginId},</if>
