@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.bricks.mapper.BrkFaceMapper">
+    
+    <resultMap type="BrkFace" id="BrkFaceResult">
+        <result property="faceId"    column="face_id"    />
+        <result property="originId"    column="origin_id"    />
+        <result property="originUrl"    column="origin_url"    />
+        <result property="eyeOriginId"    column="eye_origin_id"    />
+        <result property="monthOriginId"    column="month_origin_id"    />
+        <result property="eyebrowOriginId"    column="eyebrow_origin_id"    />
+        <result property="glassOriginId"    column="glass_origin_id"    />
+        <result property="stickerOriginId"    column="sticker_origin_id"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectBrkFaceVo">
+        select face_id, origin_id, origin_url, eye_origin_id, month_origin_id, eyebrow_origin_id, glass_origin_id, sticker_origin_id, create_by, create_time, update_by, update_time from brk_face
+    </sql>
+
+    <select id="selectBrkFaceList" parameterType="BrkFace" resultMap="BrkFaceResult">
+        <include refid="selectBrkFaceVo"/>
+        <where>  
+            <if test="originId != null  and originId != ''"> and origin_id = #{originId}</if>
+            <if test="originUrl != null  and originUrl != ''"> and origin_url = #{originUrl}</if>
+            <if test="eyeOriginId != null  and eyeOriginId != ''"> and eye_origin_id = #{eyeOriginId}</if>
+            <if test="monthOriginId != null  and monthOriginId != ''"> and month_origin_id = #{monthOriginId}</if>
+            <if test="eyebrowOriginId != null  and eyebrowOriginId != ''"> and eyebrow_origin_id = #{eyebrowOriginId}</if>
+            <if test="glassOriginId != null  and glassOriginId != ''"> and glass_origin_id = #{glassOriginId}</if>
+            <if test="stickerOriginId != null  and stickerOriginId != ''"> and sticker_origin_id = #{stickerOriginId}</if>
+        </where>
+    </select>
+    
+    <select id="selectBrkFaceByFaceId" parameterType="Long" resultMap="BrkFaceResult">
+        <include refid="selectBrkFaceVo"/>
+        where face_id = #{faceId}
+    </select>
+
+    <insert id="insertBrkFace" parameterType="BrkFace" useGeneratedKeys="true" keyProperty="faceId">
+        insert into brk_face
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="originId != null and originId != ''">origin_id,</if>
+            <if test="originUrl != null and originUrl != ''">origin_url,</if>
+            <if test="eyeOriginId != null">eye_origin_id,</if>
+            <if test="monthOriginId != null">month_origin_id,</if>
+            <if test="eyebrowOriginId != null">eyebrow_origin_id,</if>
+            <if test="glassOriginId != null">glass_origin_id,</if>
+            <if test="stickerOriginId != null">sticker_origin_id,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="originId != null and originId != ''">#{originId},</if>
+            <if test="originUrl != null and originUrl != ''">#{originUrl},</if>
+            <if test="eyeOriginId != null">#{eyeOriginId},</if>
+            <if test="monthOriginId != null">#{monthOriginId},</if>
+            <if test="eyebrowOriginId != null">#{eyebrowOriginId},</if>
+            <if test="glassOriginId != null">#{glassOriginId},</if>
+            <if test="stickerOriginId != null">#{stickerOriginId},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateBrkFace" parameterType="BrkFace">
+        update brk_face
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="originId != null and originId != ''">origin_id = #{originId},</if>
+            <if test="originUrl != null and originUrl != ''">origin_url = #{originUrl},</if>
+            <if test="eyeOriginId != null">eye_origin_id = #{eyeOriginId},</if>
+            <if test="monthOriginId != null">month_origin_id = #{monthOriginId},</if>
+            <if test="eyebrowOriginId != null">eyebrow_origin_id = #{eyebrowOriginId},</if>
+            <if test="glassOriginId != null">glass_origin_id = #{glassOriginId},</if>
+            <if test="stickerOriginId != null">sticker_origin_id = #{stickerOriginId},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where face_id = #{faceId}
+    </update>
+
+    <delete id="deleteBrkFaceByFaceId" parameterType="Long">
+        delete from brk_face where face_id = #{faceId}
+    </delete>
+
+    <delete id="deleteBrkFaceByFaceIds" parameterType="String">
+        delete from brk_face where face_id in 
+        <foreach item="faceId" collection="array" open="(" separator="," close=")">
+            #{faceId}
+        </foreach>
+    </delete>
+</mapper>
