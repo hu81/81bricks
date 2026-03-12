@@ -25,7 +25,7 @@ import com.ruoyi.common.core.page.TableDataInfo;
  * 表情Controller
  * 
  * @author ruoyi
- * @date 2026-03-11
+ * @date 2026-03-12
  */
 @RestController
 @RequestMapping("/bricks/face")

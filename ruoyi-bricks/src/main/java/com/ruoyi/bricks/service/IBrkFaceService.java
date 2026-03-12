@@ -7,7 +7,7 @@ import com.ruoyi.bricks.domain.BrkFace;
  * 表情Service接口
  * 
  * @author ruoyi
- * @date 2026-03-11
+ * @date 2026-03-12
  */
 public interface IBrkFaceService 
 {

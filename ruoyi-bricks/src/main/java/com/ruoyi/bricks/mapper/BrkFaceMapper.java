@@ -2,12 +2,13 @@ package com.ruoyi.bricks.mapper;
 
 import java.util.List;
 import com.ruoyi.bricks.domain.BrkFace;
+import com.ruoyi.bricks.domain.BrkFaceLayer;
 
 /**
  * 表情Mapper接口
  * 
  * @author ruoyi
- * @date 2026-03-11
+ * @date 2026-03-12
  */
 public interface BrkFaceMapper 
 {
@@ -58,4 +59,45 @@ public interface BrkFaceMapper
      * @return 结果
      */
     public int deleteBrkFaceByFaceIds(Long[] faceIds);
+
+    /**
+     * 批量删除情图层
+     * 
+     * @param faceIds 需要删除的数据主键集合
+     * @return 结果
+     */
+    public int deleteBrkFaceLayerByFaceIds(Long[] faceIds);
+    
+    /**
+     * 批量新增情图层
+     * 
+     * @param brkFaceLayerList 情图层列表
+     * @return 结果
+     */
+    public int batchBrkFaceLayer(List<BrkFaceLayer> brkFaceLayerList);
+    
+
+    /**
+     * 通过表情主键删除情图层信息
+     * 
+     * @param faceId 表情ID
+     * @return 结果
+     */
+    public int deleteBrkFaceLayerByFaceId(Long faceId);
+
+    /**
+     * 通过faceId查询图层列表
+     *
+     * @param faceId 表情ID
+     * @return 图层列表
+     */
+    public List<BrkFaceLayer> selectBrkFaceLayerList(Long faceId);
+
+    /**
+     * 通过originId查询表情
+     *
+     * @param originId 表情originId
+     * @return 表情
+     */
+    public BrkFace selectBrkFaceByOriginId(String originId);
 }

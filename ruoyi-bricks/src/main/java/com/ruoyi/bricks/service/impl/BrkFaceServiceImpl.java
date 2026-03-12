@@ -4,6 +4,10 @@ import java.util.List;
 import com.ruoyi.common.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.util.ArrayList;
+import com.ruoyi.common.utils.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+import com.ruoyi.bricks.domain.BrkFaceLayer;
 import com.ruoyi.bricks.mapper.BrkFaceMapper;
 import com.ruoyi.bricks.domain.BrkFace;
 import com.ruoyi.bricks.service.IBrkFaceService;
@@ -12,7 +16,7 @@ import com.ruoyi.bricks.service.IBrkFaceService;
  * 表情Service业务层处理
  * 
  * @author ruoyi
- * @date 2026-03-11
+ * @date 2026-03-12
  */
 @Service
 public class BrkFaceServiceImpl implements IBrkFaceService 
@@ -41,7 +45,12 @@ public class BrkFaceServiceImpl implements IBrkFaceService
     @Override
     public List<BrkFace> selectBrkFaceList(BrkFace brkFace)
     {
-        return brkFaceMapper.selectBrkFaceList(brkFace);
+        List<BrkFace> list = brkFaceMapper.selectBrkFaceList(brkFace);
+        for (BrkFace face : list)
+        {
+            face.setBrkFaceLayerList(brkFaceMapper.selectBrkFaceLayerList(face.getFaceId()));
+        }
+        return list;
     }
 
     /**
@@ -50,11 +59,14 @@ public class BrkFaceServiceImpl implements IBrkFaceService
      * @param brkFace 表情
      * @return 结果
      */
+    @Transactional
     @Override
     public int insertBrkFace(BrkFace brkFace)
     {
         brkFace.setCreateTime(DateUtils.getNowDate());
-        return brkFaceMapper.insertBrkFace(brkFace);
+        int rows = brkFaceMapper.insertBrkFace(brkFace);
+        insertBrkFaceLayer(brkFace);
+        return rows;
     }
 
     /**
@@ -63,10 +75,13 @@ public class BrkFaceServiceImpl implements IBrkFaceService
      * @param brkFace 表情
      * @return 结果
      */
+    @Transactional
     @Override
     public int updateBrkFace(BrkFace brkFace)
     {
         brkFace.setUpdateTime(DateUtils.getNowDate());
+        brkFaceMapper.deleteBrkFaceLayerByFaceId(brkFace.getFaceId());
+        insertBrkFaceLayer(brkFace);
         return brkFaceMapper.updateBrkFace(brkFace);
     }
 
@@ -76,9 +91,11 @@ public class BrkFaceServiceImpl implements IBrkFaceService
      * @param faceIds 需要删除的表情主键
      * @return 结果
      */
+    @Transactional
     @Override
     public int deleteBrkFaceByFaceIds(Long[] faceIds)
     {
+        brkFaceMapper.deleteBrkFaceLayerByFaceIds(faceIds);
         return brkFaceMapper.deleteBrkFaceByFaceIds(faceIds);
     }
 
@@ -88,9 +105,35 @@ public class BrkFaceServiceImpl implements IBrkFaceService
      * @param faceId 表情主键
      * @return 结果
      */
+    @Transactional
     @Override
     public int deleteBrkFaceByFaceId(Long faceId)
     {
+        brkFaceMapper.deleteBrkFaceLayerByFaceId(faceId);
         return brkFaceMapper.deleteBrkFaceByFaceId(faceId);
+    }
+
+    /**
+     * 新增情图层信息
+     * 
+     * @param brkFace 表情对象
+     */
+    public void insertBrkFaceLayer(BrkFace brkFace)
+    {
+        List<BrkFaceLayer> brkFaceLayerList = brkFace.getBrkFaceLayerList();
+        Long faceId = brkFace.getFaceId();
+        if (StringUtils.isNotNull(brkFaceLayerList))
+        {
+            List<BrkFaceLayer> list = new ArrayList<BrkFaceLayer>();
+            for (BrkFaceLayer brkFaceLayer : brkFaceLayerList)
+            {
+                brkFaceLayer.setFaceId(faceId);
+                list.add(brkFaceLayer);
+            }
+            if (list.size() > 0)
+            {
+                brkFaceMapper.batchBrkFaceLayer(list);
+            }
+        }
     }
 }

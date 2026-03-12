@@ -6,64 +6,80 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     
     <resultMap type="BrkFace" id="BrkFaceResult">
         <result property="faceId"    column="face_id"    />
+        <result property="faceName"    column="face_name"    />
+        <result property="comments"    column="comments"    />
         <result property="originId"    column="origin_id"    />
         <result property="originUrl"    column="origin_url"    />
-        <result property="eyeOriginId"    column="eye_origin_id"    />
-        <result property="monthOriginId"    column="month_origin_id"    />
-        <result property="eyebrowOriginId"    column="eyebrow_origin_id"    />
-        <result property="glassOriginId"    column="glass_origin_id"    />
-        <result property="stickerOriginId"    column="sticker_origin_id"    />
         <result property="createBy"    column="create_by"    />
         <result property="createTime"    column="create_time"    />
         <result property="updateBy"    column="update_by"    />
         <result property="updateTime"    column="update_time"    />
     </resultMap>
 
+    <resultMap id="BrkFaceBrkFaceLayerResult" type="BrkFace" extends="BrkFaceResult">
+        <collection property="brkFaceLayerList" ofType="BrkFaceLayer" column="face_id" select="selectBrkFaceLayerList" />
+    </resultMap>
+
+    <resultMap type="BrkFaceLayer" id="BrkFaceLayerResult">
+        <result property="layerId"    column="layer_id"    />
+        <result property="faceId"    column="face_id"    />
+        <result property="layerType"    column="layer_type"    />
+        <result property="data"    column="data"    />
+        <result property="x"    column="x"    />
+        <result property="y"    column="y"    />
+        <result property="width"    column="width"    />
+        <result property="height"    column="height"    />
+    </resultMap>
+
     <sql id="selectBrkFaceVo">
-        select face_id, origin_id, origin_url, eye_origin_id, month_origin_id, eyebrow_origin_id, glass_origin_id, sticker_origin_id, create_by, create_time, update_by, update_time from brk_face
+        select face_id, face_name, comments, origin_id, origin_url, create_by, create_time, update_by, update_time from brk_face
     </sql>
 
     <select id="selectBrkFaceList" parameterType="BrkFace" resultMap="BrkFaceResult">
         <include refid="selectBrkFaceVo"/>
         <where>  
+            <if test="faceName != null  and faceName != ''"> and face_name like concat('%', #{faceName}, '%')</if>
+            <if test="comments != null  and comments != ''"> and comments = #{comments}</if>
             <if test="originId != null  and originId != ''"> and origin_id = #{originId}</if>
             <if test="originUrl != null  and originUrl != ''"> and origin_url = #{originUrl}</if>
-            <if test="eyeOriginId != null  and eyeOriginId != ''"> and eye_origin_id = #{eyeOriginId}</if>
-            <if test="monthOriginId != null  and monthOriginId != ''"> and month_origin_id = #{monthOriginId}</if>
-            <if test="eyebrowOriginId != null  and eyebrowOriginId != ''"> and eyebrow_origin_id = #{eyebrowOriginId}</if>
-            <if test="glassOriginId != null  and glassOriginId != ''"> and glass_origin_id = #{glassOriginId}</if>
-            <if test="stickerOriginId != null  and stickerOriginId != ''"> and sticker_origin_id = #{stickerOriginId}</if>
         </where>
     </select>
     
-    <select id="selectBrkFaceByFaceId" parameterType="Long" resultMap="BrkFaceResult">
-        <include refid="selectBrkFaceVo"/>
+    <select id="selectBrkFaceByFaceId" parameterType="Long" resultMap="BrkFaceBrkFaceLayerResult">
+        select face_id, face_name, comments, origin_id, origin_url, create_by, create_time, update_by, update_time
+        from brk_face
+        where face_id = #{faceId}
+    </select>
+
+    <select id="selectBrkFaceByOriginId" parameterType="String" resultMap="BrkFaceResult">
+        select face_id, face_name, comments, origin_id, origin_url, create_by, create_time, update_by, update_time
+        from brk_face
+        where origin_id = #{originId}
+    </select>
+
+    <select id="selectBrkFaceLayerList" parameterType="Long" resultMap="BrkFaceLayerResult">
+        select layer_id, face_id, layer_type, data, x, y, width, height
+        from brk_face_layer
         where face_id = #{faceId}
     </select>
 
     <insert id="insertBrkFace" parameterType="BrkFace" useGeneratedKeys="true" keyProperty="faceId">
         insert into brk_face
         <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="faceName != null and faceName != ''">face_name,</if>
+            <if test="comments != null">comments,</if>
             <if test="originId != null">origin_id,</if>
             <if test="originUrl != null">origin_url,</if>
-            <if test="eyeOriginId != null">eye_origin_id,</if>
-            <if test="monthOriginId != null">month_origin_id,</if>
-            <if test="eyebrowOriginId != null">eyebrow_origin_id,</if>
-            <if test="glassOriginId != null">glass_origin_id,</if>
-            <if test="stickerOriginId != null">sticker_origin_id,</if>
             <if test="createBy != null">create_by,</if>
             <if test="createTime != null">create_time,</if>
             <if test="updateBy != null">update_by,</if>
             <if test="updateTime != null">update_time,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="faceName != null and faceName != ''">#{faceName},</if>
+            <if test="comments != null">#{comments},</if>
             <if test="originId != null">#{originId},</if>
             <if test="originUrl != null">#{originUrl},</if>
-            <if test="eyeOriginId != null">#{eyeOriginId},</if>
-            <if test="monthOriginId != null">#{monthOriginId},</if>
-            <if test="eyebrowOriginId != null">#{eyebrowOriginId},</if>
-            <if test="glassOriginId != null">#{glassOriginId},</if>
-            <if test="stickerOriginId != null">#{stickerOriginId},</if>
             <if test="createBy != null">#{createBy},</if>
             <if test="createTime != null">#{createTime},</if>
             <if test="updateBy != null">#{updateBy},</if>
@@ -74,13 +90,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <update id="updateBrkFace" parameterType="BrkFace">
         update brk_face
         <trim prefix="SET" suffixOverrides=",">
+            <if test="faceName != null and faceName != ''">face_name = #{faceName},</if>
+            <if test="comments != null">comments = #{comments},</if>
             <if test="originId != null">origin_id = #{originId},</if>
             <if test="originUrl != null">origin_url = #{originUrl},</if>
-            <if test="eyeOriginId != null">eye_origin_id = #{eyeOriginId},</if>
-            <if test="monthOriginId != null">month_origin_id = #{monthOriginId},</if>
-            <if test="eyebrowOriginId != null">eyebrow_origin_id = #{eyebrowOriginId},</if>
-            <if test="glassOriginId != null">glass_origin_id = #{glassOriginId},</if>
-            <if test="stickerOriginId != null">sticker_origin_id = #{stickerOriginId},</if>
             <if test="createBy != null">create_by = #{createBy},</if>
             <if test="createTime != null">create_time = #{createTime},</if>
             <if test="updateBy != null">update_by = #{updateBy},</if>
@@ -99,4 +112,22 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{faceId}
         </foreach>
     </delete>
+    
+    <delete id="deleteBrkFaceLayerByFaceIds" parameterType="String">
+        delete from brk_face_layer where face_id in 
+        <foreach item="faceId" collection="array" open="(" separator="," close=")">
+            #{faceId}
+        </foreach>
+    </delete>
+
+    <delete id="deleteBrkFaceLayerByFaceId" parameterType="Long">
+        delete from brk_face_layer where face_id = #{faceId}
+    </delete>
+
+    <insert id="batchBrkFaceLayer">
+        insert into brk_face_layer( face_id, layer_type, data, x, y, width, height) values
+        <foreach item="item" index="index" collection="list" separator=",">
+            ( #{item.faceId}, #{item.layerType}, #{item.data}, #{item.x}, #{item.y}, #{item.width}, #{item.height})
+        </foreach>
+    </insert>
 </mapper>

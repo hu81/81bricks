@@ -8,15 +8,21 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import com.ruoyi.common.utils.DateUtils;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.bricks.mapper.BrkResourceMapper;
+import com.ruoyi.bricks.mapper.BrkFaceMapper;
 import com.ruoyi.bricks.domain.BrkResource;
+import com.ruoyi.bricks.domain.BrkFace;
+import com.ruoyi.bricks.domain.BrkFaceLayer;
 import com.ruoyi.bricks.domain.LibraryInfo;
 import com.ruoyi.bricks.domain.ResourceData;
+import com.ruoyi.bricks.domain.FaceData;
 import com.ruoyi.bricks.service.IBrkResourceService;
+import com.ruoyi.bricks.service.IBrkFaceService;
 import com.ruoyi.common.config.RuoYiConfig;
 import com.alibaba.fastjson2.JSON;
 import org.slf4j.Logger;
@@ -37,6 +43,9 @@ public class BrkResourceServiceImpl implements IBrkResourceService
 
     @Autowired
     private BrkResourceMapper brkResourceMapper;
+
+    @Autowired
+    private BrkFaceMapper brkFaceMapper;
 
     /**
      * 查询资源图片
@@ -204,7 +213,7 @@ public class BrkResourceServiceImpl implements IBrkResourceService
             {
                 if ("推荐".equals(subLabel.getName()))
                 {
-                    log.info("Skipping '推荐' label");
+                    saveFaceImages(subLabel);
                     continue;
                 }
 
@@ -273,6 +282,126 @@ public class BrkResourceServiceImpl implements IBrkResourceService
     }
 
     /**
+     * Save face images from 推荐 label to brk_face and brk_face_layer tables
+     *
+     * @param recommendLabel The 推荐 label containing face assets
+     */
+    private void saveFaceImages(LibraryInfo.TabLabel recommendLabel)
+    {
+        try
+        {
+            int insertCount = 0;
+            int skipCount = 0;
+
+            if (recommendLabel.getAssets() == null || recommendLabel.getAssets().isEmpty())
+            {
+                log.warn("No assets found in '推荐' label");
+                return;
+            }
+
+            for (String assetUrl : recommendLabel.getAssets())
+            {
+                log.info("Processing face asset: {}", assetUrl);
+                FaceData faceData = downloadAndParseFaceJson(assetUrl);
+
+                if (faceData == null)
+                {
+                    log.warn("Failed to download or parse face JSON: {}", assetUrl);
+                    continue;
+                }
+
+                String originId = assetUrl.substring(assetUrl.lastIndexOf("/") + 1);
+
+                BrkFace existingFace = brkFaceMapper.selectBrkFaceByOriginId(originId);
+
+                if (existingFace != null)
+                {
+                    skipCount++;
+                    log.info("Skipping existing face: {}", originId);
+                    continue;
+                }
+
+                if (faceData.getData() == null)
+                {
+                    log.warn("No data found in face JSON: {}", assetUrl);
+                    continue;
+                }
+
+                Map<String, Object> dataMap = faceData.getData();
+
+                BrkFace brkFace = new BrkFace();
+                brkFace.setFaceName(originId.replace(".json", ""));
+                brkFace.setOriginId(originId);
+                brkFace.setOriginUrl(assetUrl);
+                brkFace.setCreateTime(DateUtils.getNowDate());
+
+                brkFaceMapper.insertBrkFace(brkFace);
+
+                Long faceId = brkFace.getFaceId();
+
+                List<BrkFaceLayer> layerList = new ArrayList<>();
+
+                String[] layerTypes = {"嘴巴", "眼睛", "眉毛", "眼镜", "贴纸"};
+                for (String layerType : layerTypes)
+                {
+                    if (dataMap.containsKey(layerType))
+                    {
+                        Object layerObj = dataMap.get(layerType);
+                        String imageData = null;
+
+                        if (layerObj instanceof List)
+                        {
+                            List<?> layerListData = (List<?>) layerObj;
+                            if (!layerListData.isEmpty())
+                            {
+                                Object firstItem = layerListData.get(0);
+                                if (firstItem instanceof Map)
+                                {
+                                    Map<?, ?> firstMap = (Map<?, ?>) firstItem;
+                                    imageData = (String) firstMap.get("image");
+                                }
+                            }
+                        }
+                        else if (layerObj instanceof Map)
+                        {
+                            Map<?, ?> layerMap = (Map<?, ?>) layerObj;
+                            imageData = (String) layerMap.get("image");
+                        }
+
+                        if (imageData != null && !imageData.isEmpty())
+                        {
+                            BrkFaceLayer layer = new BrkFaceLayer();
+                            layer.setFaceId(faceId);
+                            layer.setLayerType(layerType);
+                            layer.setData(imageData);
+                            layer.setX(null);
+                            layer.setY(null);
+                            layer.setWidth(null);
+                            layer.setHeight(null);
+                            layer.setCreateTime(DateUtils.getNowDate());
+                            layerList.add(layer);
+                        }
+                    }
+                }
+
+                if (!layerList.isEmpty())
+                {
+                    brkFaceMapper.batchBrkFaceLayer(layerList);
+                }
+
+                insertCount++;
+                log.info("Inserted face: {} with {} layers", originId, layerList.size());
+            }
+
+            log.info("Face processing completed - Insert: {}, Skip: {}", insertCount, skipCount);
+        }
+        catch (Exception e)
+        {
+            log.error("Failed to save face images", e);
+        }
+    }
+
+    /**
      * Download and parse resource JSON file
      *
      * @param url URL to download
@@ -321,6 +450,77 @@ public class BrkResourceServiceImpl implements IBrkResourceService
         catch (Exception e)
         {
             log.error("Failed to download and parse resource JSON from URL: {}", url, e);
+            return null;
+        }
+        finally
+        {
+            if (inputStream != null)
+            {
+                try
+                {
+                    inputStream.close();
+                }
+                catch (IOException e)
+                {
+                    log.error("Failed to close input stream", e);
+                }
+            }
+            if (connection != null)
+            {
+                connection.disconnect();
+            }
+        }
+    }
+
+    /**
+     * Download and parse face JSON file
+     *
+     * @param url URL to download
+     * @return FaceData object or null if failed
+     */
+    private FaceData downloadAndParseFaceJson(String url)
+    {
+        HttpURLConnection connection = null;
+        InputStream inputStream = null;
+        try
+        {
+            URL httpUrl = new URL(url);
+            connection = (HttpURLConnection) httpUrl.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(10000);
+            connection.setReadTimeout(30000);
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK)
+            {
+                inputStream = connection.getInputStream();
+                String response = readInputStream(inputStream);
+
+                if (response == null || response.trim().isEmpty())
+                {
+                    log.warn("Empty response from URL: {}", url);
+                    return null;
+                }
+
+                String trimmed = response.trim();
+                if (!trimmed.startsWith("{") && !trimmed.startsWith("["))
+                {
+                    log.warn("Response is not valid JSON from URL: {}", url);
+                    return null;
+                }
+
+                return JSON.parseObject(response, FaceData.class);
+            }
+            else
+            {
+                log.warn("HTTP error {} from URL: {}", responseCode, url);
+                return null;
+            }
+        }
+        catch (Exception e)
+        {
+            log.error("Failed to download and parse face JSON from URL: {}", url, e);
             return null;
         }
         finally
