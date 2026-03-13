@@ -11,6 +11,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.InflaterInputStream;
+import java.nio.charset.StandardCharsets;
 import com.ruoyi.common.utils.DateUtils;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.bricks.mapper.BrkResourceMapper;
@@ -859,16 +862,35 @@ public class BrkResourceServiceImpl implements IBrkResourceService
             connection.setConnectTimeout(10000);
             connection.setReadTimeout(30000);
             connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+            connection.setRequestProperty("Accept-Encoding", "gzip, deflate");
 
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK)
             {
                 inputStream = connection.getInputStream();
+                
+                String contentEncoding = connection.getContentEncoding();
+                if ("gzip".equalsIgnoreCase(contentEncoding))
+                {
+                    inputStream = new GZIPInputStream(inputStream);
+                }
+                else if ("deflate".equalsIgnoreCase(contentEncoding))
+                {
+                    inputStream = new InflaterInputStream(inputStream);
+                }
+
                 String response = readInputStream(inputStream);
 
                 if (response == null || response.trim().isEmpty())
                 {
                     log.warn("Empty response from URL: {}", url);
+                    return null;
+                }
+
+                String trimmed = response.trim();
+                if (!trimmed.startsWith("{") && !trimmed.startsWith("["))
+                {
+                    log.warn("Response is not valid JSON from URL: {}", url);
                     return null;
                 }
 
