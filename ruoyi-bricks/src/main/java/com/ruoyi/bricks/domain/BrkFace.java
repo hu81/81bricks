@@ -38,6 +38,9 @@ public class BrkFace extends BaseEntity
     /** 图层信息 */
     private List<BrkFaceLayer> layers;
 
+    /** 是否自定义表情（true:自定义/preset为空, false:预置/originId不为空, null:所有） */
+    private Boolean custom;
+
     public void setFaceId(Long faceId) 
     {
         this.faceId = faceId;
@@ -98,6 +101,16 @@ public class BrkFace extends BaseEntity
         this.layers = layers;
     }
 
+    public Boolean getCustom()
+    {
+        return custom;
+    }
+
+    public void setCustom(Boolean custom)
+    {
+        this.custom = custom;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
@@ -111,6 +124,7 @@ public class BrkFace extends BaseEntity
             .append("updateBy", getUpdateBy())
             .append("updateTime", getUpdateTime())
             .append("layers", getLayers())
+            .append("custom", getCustom())
             .toString();
     }
 }

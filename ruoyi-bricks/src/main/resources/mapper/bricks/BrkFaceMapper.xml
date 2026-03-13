@@ -42,7 +42,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="comments != null  and comments != ''"> and comments = #{comments}</if>
             <if test="originId != null  and originId != ''"> and origin_id = #{originId}</if>
             <if test="originUrl != null  and originUrl != ''"> and origin_url = #{originUrl}</if>
+            <if test="custom != null and custom == true"> and (origin_id is null or origin_id = '')</if>
+            <if test="custom != null and custom == false"> and origin_id is not null and origin_id != ''</if>
         </where>
+        order by update_time desc, face_id asc
     </select>
     
     <select id="selectBrkFaceByFaceId" parameterType="Long" resultMap="BrkFaceBrkFaceLayerResult">

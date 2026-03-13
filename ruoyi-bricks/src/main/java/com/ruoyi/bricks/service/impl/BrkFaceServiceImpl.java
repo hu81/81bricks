@@ -64,6 +64,7 @@ public class BrkFaceServiceImpl implements IBrkFaceService
     public int insertBrkFace(BrkFace brkFace)
     {
         brkFace.setCreateTime(DateUtils.getNowDate());
+        brkFace.setUpdateTime(brkFace.getCreateTime());
         int rows = brkFaceMapper.insertBrkFace(brkFace);
         insertBrkFaceLayer(brkFace);
         return rows;
