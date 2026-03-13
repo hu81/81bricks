@@ -248,22 +248,21 @@ public class BrkBricksBrick extends BaseEntity
 
     public String toLdrLine()
     {
-        return String.format("1 %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s",
-            nvl(colorId), nvl(x), nvl(y), nvl(z),
-            nvl(m11), nvl(m12), nvl(m13),
-            nvl(m21), nvl(m22), nvl(m23),
-            nvl(m31), nvl(m32), nvl(m33),
-            nvl(partNumber));
+        return "1 " + 
+            nvl(colorId) + " " + nvl(x) + " " + nvl(y) + " " + nvl(z) + " " +
+            nvl(m11) + " " + nvl(m12) + " " + nvl(m13) + " " +
+            nvl(m21) + " " + nvl(m22) + " " + nvl(m23) + " " +
+            nvl(m31) + " " + nvl(m32) + " " + nvl(m33) + " " +
+            nvl(partNumber);
     }
 
     private String nvl(Object obj)
     {
-        return obj == null ? "0" : obj.toString();
-    }
-
-    private String nvl(BigDecimal obj)
-    {
-        return obj == null ? "0" : obj.toString();
+        if (obj == null) return "0";
+        if (obj instanceof BigDecimal) {
+            return obj.toString();
+        }
+        return obj.toString();
     }
 
     @Override
