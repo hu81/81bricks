@@ -55,7 +55,7 @@ drop table if exists brk_bricks;
 create table brk_bricks (
   bricks_id          bigint(20)      not null auto_increment    comment '积木模型ID',
   bricks_name        varchar(500)    not null                   comment '积木模型名称',
-  uuid               varchar(64)     not null                   comment '模型UUID',
+  uuid               varchar(256)     not null                   comment '模型UUID',
   asset_type         varchar(50)     not null                   comment '资产类型',
   category           varchar(50)     not null                   comment '分类(hair/body/shoes等)',
   diy_group          varchar(50)     default null               comment 'DIY分组',

@@ -29,6 +29,7 @@ import com.ruoyi.bricks.domain.HairData;
 import com.alibaba.fastjson2.JSONArray;
 import com.ruoyi.bricks.service.IBrkResourceService;
 import com.ruoyi.bricks.service.IBrkFaceService;
+import com.ruoyi.bricks.service.IBrkBricksService;
 import com.ruoyi.common.config.RuoYiConfig;
 import com.alibaba.fastjson2.JSON;
 import org.slf4j.Logger;
@@ -55,6 +56,9 @@ public class BrkResourceServiceImpl implements IBrkResourceService
 
     @Autowired
     private BrkBricksMapper brkBricksMapper;
+
+    @Autowired
+    private IBrkBricksService brkBricksService;
 
     /**
      * 查询资源图片
@@ -803,7 +807,7 @@ public class BrkResourceServiceImpl implements IBrkResourceService
                 brkBricks.setBricks(brickList);
                 brkBricks.setConnpoints(connpointList);
 
-                brkBricksMapper.insertBrkBricks(brkBricks);
+                brkBricksService.insertBrkBricks(brkBricks);
 
                 insertCount++;
                 log.info("Inserted bricks model: {} with {} bricks, {} connpoints", originId, brickList.size(), connpointList.size());
