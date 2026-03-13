@@ -1,5 +1,6 @@
 package com.ruoyi.bricks.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import com.ruoyi.common.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -136,23 +137,23 @@ public class BrkBricksServiceImpl implements IBrkBricksService
     }
 
     @Override
-    public String generateLdrContent(Long bricksId)
+    public List<String> generateLdrContent(Long bricksId)
     {
+        List<String> lines = new ArrayList<>();
         BrkBricks bricks = selectBrkBricksByBricksId(bricksId);
         if (bricks == null || bricks.getBricks() == null)
         {
-            return "";
+            return lines;
         }
 
-        StringBuilder ldr = new StringBuilder();
-        ldr.append("0 Name: ").append(bricks.getBricksName()).append("\n");
-        ldr.append("0 Comment: Generated from brk_bricks\n");
+        lines.add("0 Name: " + bricks.getBricksName());
+        lines.add("0 Comment: Generated from brk_bricks");
         
         for (BrkBricksBrick brick : bricks.getBricks())
         {
-            ldr.append(brick.toLdrLine()).append("\n");
+            lines.add(brick.toLdrLine());
         }
         
-        return ldr.toString();
+        return lines;
     }
 }

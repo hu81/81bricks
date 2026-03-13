@@ -27,5 +27,5 @@ public interface IBrkBricksService
 
     public int deleteBrkBricksByBricksIds(Long[] bricksIds);
 
-    public String generateLdrContent(Long bricksId);
+    public List<String> generateLdrContent(Long bricksId);
 }

@@ -75,7 +75,9 @@ public class BrkBricksController extends BaseController
     @GetMapping("/ldr/{bricksId}")
     public AjaxResult getLdrContent(@PathVariable("bricksId") Long bricksId)
     {
-        String ldrContent = brkBricksService.generateLdrContent(bricksId);
-        return AjaxResult.success(ldrContent);
+        List<String> ldrContent = brkBricksService.generateLdrContent(bricksId);
+        AjaxResult result = new AjaxResult();
+        result.put(AjaxResult.DATA_TAG, ldrContent);
+        return result;
     }
 }
