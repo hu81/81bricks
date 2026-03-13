@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.bricks.mapper.BrkBricksMapper">
+    
+    <resultMap type="BrkBricks" id="BrkBricksResult">
+        <result property="bricksId"    column="bricks_id"    />
+        <result property="bricksName"    column="bricks_name"    />
+        <result property="uuid"    column="uuid"    />
+        <result property="assetType"    column="asset_type"    />
+        <result property="category"    column="category"    />
+        <result property="diyGroup"    column="diy_group"    />
+        <result property="rootGroup"    column="root_group"    />
+        <result property="defaultColor"    column="default_color"    />
+        <result property="originId"    column="origin_id"    />
+        <result property="originUrl"    column="origin_url"    />
+        <result property="comments"    column="comments"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <resultMap type="BrkBricksBrick" id="BrkBricksBrickResult">
+        <result property="brickId"    column="brick_id"    />
+        <result property="bricksId"    column="bricks_id"    />
+        <result property="brickIndex"    column="brick_index"    />
+        <result property="partNumber"    column="part_number"    />
+        <result property="colorId"    column="color_id"    />
+        <result property="x"    column="x"    />
+        <result property="y"    column="y"    />
+        <result property="z"    column="z"    />
+        <result property="m11"    column="m11"    />
+        <result property="m12"    column="m12"    />
+        <result property="m13"    column="m13"    />
+        <result property="m14"    column="m14"    />
+        <result property="m21"    column="m21"    />
+        <result property="m22"    column="m22"    />
+        <result property="m23"    column="m23"    />
+        <result property="m24"    column="m24"    />
+        <result property="m31"    column="m31"    />
+        <result property="m32"    column="m32"    />
+        <result property="m33"    column="m33"    />
+        <result property="m34"    column="m34"    />
+    </resultMap>
+
+    <resultMap type="BrkBricksConnpoint" id="BrkBricksConnpointResult">
+        <result property="connId"    column="conn_id"    />
+        <result property="bricksId"    column="bricks_id"    />
+        <result property="connIndex"    column="conn_index"    />
+        <result property="connType"    column="conn_type"    />
+        <result property="studType"    column="stud_type"    />
+        <result property="x"    column="x"    />
+        <result property="y"    column="y"    />
+        <result property="z"    column="z"    />
+        <result property="nx"    column="nx"    />
+        <result property="ny"    column="ny"    />
+        <result property="nz"    column="nz"    />
+    </resultMap>
+
+    <sql id="selectBrkBricksVo">
+        select bricks_id, bricks_name, uuid, asset_type, category, diy_group, root_group, default_color, origin_id, origin_url, comments, create_by, create_time, update_by, update_time from brk_bricks
+    </sql>
+
+    <select id="selectBrkBricksList" parameterType="BrkBricks" resultMap="BrkBricksResult">
+        <include refid="selectBrkBricksVo"/>
+        <where>  
+            <if test="bricksName != null  and bricksName != ''"> and bricks_name like concat('%', #{bricksName}, '%')</if>
+            <if test="uuid != null  and uuid != ''"> and uuid = #{uuid}</if>
+            <if test="assetType != null  and assetType != ''"> and asset_type = #{assetType}</if>
+            <if test="category != null  and category != ''"> and category = #{category}</if>
+            <if test="originId != null  and originId != ''"> and origin_id = #{originId}</if>
+            <if test="originUrl != null  and originUrl != ''"> and origin_url = #{originUrl}</if>
+        </where>
+        order by update_time desc, bricks_id desc
+    </select>
+    
+    <select id="selectBrkBricksByBricksId" parameterType="Long" resultMap="BrkBricksResult">
+        <include refid="selectBrkBricksVo"/>
+        where bricks_id = #{bricksId}
+    </select>
+
+    <select id="selectBrkBricksByUuid" parameterType="String" resultMap="BrkBricksResult">
+        <include refid="selectBrkBricksVo"/>
+        where uuid = #{uuid}
+    </select>
+
+    <select id="selectBrkBricksByOriginId" parameterType="String" resultMap="BrkBricksResult">
+        <include refid="selectBrkBricksVo"/>
+        where origin_id = #{originId}
+    </select>
+
+    <select id="selectBrkBricksBrickList" parameterType="Long" resultMap="BrkBricksBrickResult">
+        select brick_id, bricks_id, brick_index, part_number, color_id, x, y, z, m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34
+        from brk_bricks_brick
+        where bricks_id = #{bricksId}
+        order by brick_index
+    </select>
+
+    <select id="selectBrkBricksConnpointList" parameterType="Long" resultMap="BrkBricksConnpointResult">
+        select conn_id, bricks_id, conn_index, conn_type, stud_type, x, y, z, nx, ny, nz
+        from brk_bricks_connpoint
+        where bricks_id = #{bricksId}
+        order by conn_index
+    </select>
+
+    <insert id="insertBrkBricks" parameterType="BrkBricks" useGeneratedKeys="true" keyProperty="bricksId">
+        insert into brk_bricks
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="bricksName != null and bricksName != ''">bricks_name,</if>
+            <if test="uuid != null and uuid != ''">uuid,</if>
+            <if test="assetType != null and assetType != ''">asset_type,</if>
+            <if test="category != null and category != ''">category,</if>
+            <if test="diyGroup != null">diy_group,</if>
+            <if test="rootGroup != null">root_group,</if>
+            <if test="defaultColor != null">default_color,</if>
+            <if test="originId != null">origin_id,</if>
+            <if test="originUrl != null">origin_url,</if>
+            <if test="comments != null">comments,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="bricksName != null and bricksName != ''">#{bricksName},</if>
+            <if test="uuid != null and uuid != ''">#{uuid},</if>
+            <if test="assetType != null and assetType != ''">#{assetType},</if>
+            <if test="category != null and category != ''">#{category},</if>
+            <if test="diyGroup != null">#{diyGroup},</if>
+            <if test="rootGroup != null">#{rootGroup},</if>
+            <if test="defaultColor != null">#{defaultColor},</if>
+            <if test="originId != null">#{originId},</if>
+            <if test="originUrl != null">#{originUrl},</if>
+            <if test="comments != null">#{comments},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateBrkBricks" parameterType="BrkBricks">
+        update brk_bricks
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="bricksName != null and bricksName != ''">bricks_name = #{bricksName},</if>
+            <if test="uuid != null and uuid != ''">uuid = #{uuid},</if>
+            <if test="assetType != null and assetType != ''">asset_type = #{assetType},</if>
+            <if test="category != null and category != ''">category = #{category},</if>
+            <if test="diyGroup != null">diy_group = #{diyGroup},</if>
+            <if test="rootGroup != null">root_group = #{rootGroup},</if>
+            <if test="defaultColor != null">default_color = #{defaultColor},</if>
+            <if test="originId != null">origin_id = #{originId},</if>
+            <if test="originUrl != null">origin_url = #{originUrl},</if>
+            <if test="comments != null">comments = #{comments},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where bricks_id = #{bricksId}
+    </update>
+
+    <delete id="deleteBrkBricksByBricksId" parameterType="Long">
+        delete from brk_bricks where bricks_id = #{bricksId}
+    </delete>
+
+    <delete id="deleteBrkBricksByBricksIds" parameterType="String">
+        delete from brk_bricks where bricks_id in 
+        <foreach item="bricksId" collection="array" open="(" separator="," close=")">
+            #{bricksId}
+        </foreach>
+    </delete>
+
+    <insert id="batchBrkBricksBrick">
+        insert into brk_bricks_brick( bricks_id, brick_index, part_number, color_id, x, y, z, m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34) values
+        <foreach item="item" index="index" collection="list" separator=",">
+            ( #{item.bricksId}, #{item.brickIndex}, #{item.partNumber}, #{item.colorId}, #{item.x}, #{item.y}, #{item.z}, #{item.m11}, #{item.m12}, #{item.m13}, #{item.m14}, #{item.m21}, #{item.m22}, #{item.m23}, #{item.m24}, #{item.m31}, #{item.m32}, #{item.m33}, #{item.m34})
+        </foreach>
+    </insert>
+
+    <delete id="deleteBrkBricksBrickByBricksId" parameterType="Long">
+        delete from brk_bricks_brick where bricks_id = #{bricksId}
+    </delete>
+
+    <insert id="batchBrkBricksConnpoint">
+        insert into brk_bricks_connpoint( bricks_id, conn_index, conn_type, stud_type, x, y, z, nx, ny, nz) values
+        <foreach item="item" index="index" collection="list" separator=",">
+            ( #{item.bricksId}, #{item.connIndex}, #{item.connType}, #{item.studType}, #{item.x}, #{item.y}, #{item.z}, #{item.nx}, #{item.ny}, #{item.nz})
+        </foreach>
+    </insert>
+
+    <delete id="deleteBrkBricksConnpointByBricksId" parameterType="Long">
+        delete from brk_bricks_connpoint where bricks_id = #{bricksId}
+    </delete>
+</mapper>

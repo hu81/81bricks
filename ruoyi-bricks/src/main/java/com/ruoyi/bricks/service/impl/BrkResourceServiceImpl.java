@@ -15,12 +15,17 @@ import com.ruoyi.common.utils.DateUtils;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.bricks.mapper.BrkResourceMapper;
 import com.ruoyi.bricks.mapper.BrkFaceMapper;
+import com.ruoyi.bricks.mapper.BrkBricksMapper;
 import com.ruoyi.bricks.domain.BrkResource;
 import com.ruoyi.bricks.domain.BrkFace;
 import com.ruoyi.bricks.domain.BrkFaceLayer;
+import com.ruoyi.bricks.domain.BrkBricks;
+import com.ruoyi.bricks.domain.BrkBricksBrick;
+import com.ruoyi.bricks.domain.BrkBricksConnpoint;
 import com.ruoyi.bricks.domain.LibraryInfo;
 import com.ruoyi.bricks.domain.ResourceData;
 import com.ruoyi.bricks.domain.FaceData;
+import com.ruoyi.bricks.domain.HairData;
 import com.ruoyi.bricks.service.IBrkResourceService;
 import com.ruoyi.bricks.service.IBrkFaceService;
 import com.ruoyi.common.config.RuoYiConfig;
@@ -46,6 +51,9 @@ public class BrkResourceServiceImpl implements IBrkResourceService
 
     @Autowired
     private BrkFaceMapper brkFaceMapper;
+
+    @Autowired
+    private BrkBricksMapper brkBricksMapper;
 
     /**
      * 查询资源图片
@@ -156,6 +164,11 @@ public class BrkResourceServiceImpl implements IBrkResourceService
             if (libraryInfo.getTabsV2() != null && libraryInfo.getTabsV2().getLabels() != null)
             {
                 saveResourceImages(libraryInfo);
+            }
+
+            if (libraryInfo.getConfig() != null && libraryInfo.getConfig().getAssetInfo() != null)
+            {
+                saveBricksModels(libraryInfo);
             }
 
             log.info("Successfully parsed library JSON file and saved eye images");
@@ -624,5 +637,253 @@ public class BrkResourceServiceImpl implements IBrkResourceService
             }
         }
         return response.toString();
+    }
+
+    /**
+     * Save bricks models from config.asset_info to brk_bricks tables
+     *
+     * @param libraryInfo Library configuration object
+     */
+    private void saveBricksModels(LibraryInfo libraryInfo)
+    {
+        try
+        {
+            int insertCount = 0;
+            int skipCount = 0;
+
+            Map<String, LibraryInfo.AssetInfo> assetInfoMap = libraryInfo.getConfig().getAssetInfo();
+            if (assetInfoMap == null || assetInfoMap.isEmpty())
+            {
+                log.warn("No asset_info found in library JSON");
+                return;
+            }
+
+            for (Map.Entry<String, LibraryInfo.AssetInfo> entry : assetInfoMap.entrySet())
+            {
+                String assetUrl = entry.getKey();
+                LibraryInfo.AssetInfo assetInfo = entry.getValue();
+
+                if (assetInfo == null)
+                {
+                    continue;
+                }
+
+                String assetType = assetInfo.getType();
+                if (assetType == null || !assetType.equals("发型"))
+                {
+                    continue;
+                }
+
+                String originId = assetUrl.substring(assetUrl.lastIndexOf("/") + 1);
+
+                BrkBricks existingBricks = brkBricksMapper.selectBrkBricksByOriginId(originId);
+                if (existingBricks != null)
+                {
+                    skipCount++;
+                    log.info("Skipping existing bricks model: {}", originId);
+                    continue;
+                }
+
+                log.info("Processing bricks model: {}", assetUrl);
+                HairData hairData = downloadAndParseHairJson(assetUrl);
+
+                if (hairData == null || hairData.getData() == null || hairData.getData().getModel() == null)
+                {
+                    log.warn("Failed to download or parse hair JSON: {}", assetUrl);
+                    continue;
+                }
+
+                HairData.Model model = hairData.getData().getModel();
+                HairData.ModelData modelData = model.getData();
+                HairData.Config config = modelData != null ? modelData.getConfig() : null;
+
+                BrkBricks brkBricks = new BrkBricks();
+                brkBricks.setBricksName(originId.replace(".json", ""));
+                brkBricks.setUuid(model.getUuid());
+                brkBricks.setAssetType(hairData.getType());
+                brkBricks.setCategory("hair");
+                if (config != null)
+                {
+                    brkBricks.setDiyGroup(config.getDiyGroup());
+                    brkBricks.setRootGroup(config.getRoot());
+                }
+                brkBricks.setDefaultColor(hairData.getData().getDefaultColor());
+                brkBricks.setOriginId(originId);
+                brkBricks.setOriginUrl(assetUrl);
+                brkBricks.setCreateTime(DateUtils.getNowDate());
+
+                List<BrkBricksBrick> brickList = new ArrayList<>();
+                if (modelData != null && modelData.getInstance() != null)
+                {
+                    Map<String, Object[]> brickMap = modelData.getInstance().getBrick();
+                    if (brickMap != null)
+                    {
+                        for (Map.Entry<String, Object[]> brickEntry : brickMap.entrySet())
+                        {
+                            Object[] brickData = brickEntry.getValue();
+                            if (brickData != null && brickData.length >= 3)
+                            {
+                                BrkBricksBrick brick = new BrkBricksBrick();
+                                brick.setBrickIndex(Integer.parseInt(brickEntry.getKey()));
+                                brick.setPartNumber(String.valueOf(brickData[0]));
+                                brick.setColorId(String.valueOf(brickData[1]));
+
+                                Object[] transform = (Object[]) brickData[2];
+                                if (transform != null && transform.length >= 12)
+                                {
+                                    brick.setX(parseBigDecimal(transform[0]));
+                                    brick.setY(parseBigDecimal(transform[1]));
+                                    brick.setZ(parseBigDecimal(transform[2]));
+                                    brick.setM11(parseBigDecimal(transform[3]));
+                                    brick.setM12(parseBigDecimal(transform[4]));
+                                    brick.setM13(parseBigDecimal(transform[5]));
+                                    brick.setM21(parseBigDecimal(transform[6]));
+                                    brick.setM22(parseBigDecimal(transform[7]));
+                                    brick.setM23(parseBigDecimal(transform[8]));
+                                    brick.setM31(parseBigDecimal(transform[9]));
+                                    brick.setM32(parseBigDecimal(transform[10]));
+                                    brick.setM33(parseBigDecimal(transform[11]));
+                                }
+                                brickList.add(brick);
+                            }
+                        }
+                    }
+                }
+
+                List<BrkBricksConnpoint> connpointList = new ArrayList<>();
+                if (modelData != null && modelData.getInstance() != null)
+                {
+                    Map<String, Object[]> connpointMap = modelData.getInstance().getConnpoint();
+                    if (connpointMap != null)
+                    {
+                        for (Map.Entry<String, Object[]> connEntry : connpointMap.entrySet())
+                        {
+                            Object[] connData = connEntry.getValue();
+                            if (connData != null && connData.length >= 5)
+                            {
+                                BrkBricksConnpoint connpoint = new BrkBricksConnpoint();
+                                connpoint.setConnIndex(Integer.parseInt(connEntry.getKey()));
+                                connpoint.setConnType(String.valueOf(connData[0]));
+                                connpoint.setStudType(String.valueOf(connData[1]));
+
+                                Object[] pos = (Object[]) connData[2];
+                                Object[] normal = (Object[]) connData[3];
+                                if (pos != null && pos.length >= 3)
+                                {
+                                    connpoint.setX(parseBigDecimal(pos[0]));
+                                    connpoint.setY(parseBigDecimal(pos[1]));
+                                    connpoint.setZ(parseBigDecimal(pos[2]));
+                                }
+                                if (normal != null && normal.length >= 3)
+                                {
+                                    connpoint.setNx(parseBigDecimal(normal[0]));
+                                    connpoint.setNy(parseBigDecimal(normal[1]));
+                                    connpoint.setNz(parseBigDecimal(normal[2]));
+                                }
+                                connpointList.add(connpoint);
+                            }
+                        }
+                    }
+                }
+
+                brkBricks.setBricks(brickList);
+                brkBricks.setConnpoints(connpointList);
+
+                brkBricksMapper.insertBrkBricks(brkBricks);
+
+                insertCount++;
+                log.info("Inserted bricks model: {} with {} bricks, {} connpoints", originId, brickList.size(), connpointList.size());
+            }
+
+            log.info("Bricks processing completed - Insert: {}, Skip: {}", insertCount, skipCount);
+        }
+        catch (Exception e)
+        {
+            log.error("Failed to save bricks models", e);
+        }
+    }
+
+    private java.math.BigDecimal parseBigDecimal(Object obj)
+    {
+        if (obj == null)
+        {
+            return java.math.BigDecimal.ZERO;
+        }
+        if (obj instanceof Number)
+        {
+            return new java.math.BigDecimal(((Number) obj).doubleValue()).setScale(6, java.math.RoundingMode.HALF_UP);
+        }
+        try
+        {
+            return new java.math.BigDecimal(String.valueOf(obj)).setScale(6, java.math.RoundingMode.HALF_UP);
+        }
+        catch (Exception e)
+        {
+            return java.math.BigDecimal.ZERO;
+        }
+    }
+
+    /**
+     * Download and parse hair JSON file
+     *
+     * @param url URL to download
+     * @return HairData object or null if failed
+     */
+    private HairData downloadAndParseHairJson(String url)
+    {
+        HttpURLConnection connection = null;
+        InputStream inputStream = null;
+        try
+        {
+            URL httpUrl = new URL(url);
+            connection = (HttpURLConnection) httpUrl.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(10000);
+            connection.setReadTimeout(30000);
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK)
+            {
+                inputStream = connection.getInputStream();
+                String response = readInputStream(inputStream);
+
+                if (response == null || response.trim().isEmpty())
+                {
+                    log.warn("Empty response from URL: {}", url);
+                    return null;
+                }
+
+                return JSON.parseObject(response, HairData.class);
+            }
+            else
+            {
+                log.warn("Failed to download hair JSON, response code: {} from URL: {}", responseCode, url);
+                return null;
+            }
+        }
+        catch (Exception e)
+        {
+            log.error("Failed to download hair JSON from URL: {}", url, e);
+            return null;
+        }
+        finally
+        {
+            if (inputStream != null)
+            {
+                try
+                {
+                    inputStream.close();
+                }
+                catch (IOException e)
+                {
+                    log.error("Failed to close input stream", e);
+                }
+            }
+            if (connection != null)
+            {
+                connection.disconnect();
+            }
+        }
     }
 }
