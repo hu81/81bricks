@@ -26,6 +26,7 @@ import com.ruoyi.bricks.domain.LibraryInfo;
 import com.ruoyi.bricks.domain.ResourceData;
 import com.ruoyi.bricks.domain.FaceData;
 import com.ruoyi.bricks.domain.HairData;
+import com.alibaba.fastjson2.JSONArray;
 import com.ruoyi.bricks.service.IBrkResourceService;
 import com.ruoyi.bricks.service.IBrkFaceService;
 import com.ruoyi.common.config.RuoYiConfig;
@@ -163,7 +164,7 @@ public class BrkResourceServiceImpl implements IBrkResourceService
 
             if (libraryInfo.getTabsV2() != null && libraryInfo.getTabsV2().getLabels() != null)
             {
-                saveResourceImages(libraryInfo);
+//                saveResourceImages(libraryInfo);
             }
 
             if (libraryInfo.getConfig() != null && libraryInfo.getConfig().getAssetInfo() != null)
@@ -715,34 +716,38 @@ public class BrkResourceServiceImpl implements IBrkResourceService
                 List<BrkBricksBrick> brickList = new ArrayList<>();
                 if (modelData != null && modelData.getInstance() != null)
                 {
-                    Map<String, Object[]> brickMap = modelData.getInstance().getBrick();
+                    Map<String, JSONArray> brickMap = modelData.getInstance().getBrick();
                     if (brickMap != null)
                     {
-                        for (Map.Entry<String, Object[]> brickEntry : brickMap.entrySet())
+                        for (Map.Entry<String, JSONArray> brickEntry : brickMap.entrySet())
                         {
-                            Object[] brickData = brickEntry.getValue();
-                            if (brickData != null && brickData.length >= 3)
+                            JSONArray brickData = brickEntry.getValue();
+                            if (brickData != null && brickData.size() >= 3)
                             {
                                 BrkBricksBrick brick = new BrkBricksBrick();
                                 brick.setBrickIndex(Integer.parseInt(brickEntry.getKey()));
-                                brick.setPartNumber(String.valueOf(brickData[0]));
-                                brick.setColorId(String.valueOf(brickData[1]));
+                                brick.setPartNumber(String.valueOf(brickData.get(0)));
+                                brick.setColorId(String.valueOf(brickData.get(1)));
 
-                                Object[] transform = (Object[]) brickData[2];
-                                if (transform != null && transform.length >= 12)
+                                Object transformObj = brickData.get(2);
+                                if (transformObj instanceof JSONArray)
                                 {
-                                    brick.setX(parseBigDecimal(transform[0]));
-                                    brick.setY(parseBigDecimal(transform[1]));
-                                    brick.setZ(parseBigDecimal(transform[2]));
-                                    brick.setM11(parseBigDecimal(transform[3]));
-                                    brick.setM12(parseBigDecimal(transform[4]));
-                                    brick.setM13(parseBigDecimal(transform[5]));
-                                    brick.setM21(parseBigDecimal(transform[6]));
-                                    brick.setM22(parseBigDecimal(transform[7]));
-                                    brick.setM23(parseBigDecimal(transform[8]));
-                                    brick.setM31(parseBigDecimal(transform[9]));
-                                    brick.setM32(parseBigDecimal(transform[10]));
-                                    brick.setM33(parseBigDecimal(transform[11]));
+                                    JSONArray transform = (JSONArray) transformObj;
+                                    if (transform.size() >= 12)
+                                    {
+                                        brick.setX(parseBigDecimal(transform.get(0)));
+                                        brick.setY(parseBigDecimal(transform.get(1)));
+                                        brick.setZ(parseBigDecimal(transform.get(2)));
+                                        brick.setM11(parseBigDecimal(transform.get(3)));
+                                        brick.setM12(parseBigDecimal(transform.get(4)));
+                                        brick.setM13(parseBigDecimal(transform.get(5)));
+                                        brick.setM21(parseBigDecimal(transform.get(6)));
+                                        brick.setM22(parseBigDecimal(transform.get(7)));
+                                        brick.setM23(parseBigDecimal(transform.get(8)));
+                                        brick.setM31(parseBigDecimal(transform.get(9)));
+                                        brick.setM32(parseBigDecimal(transform.get(10)));
+                                        brick.setM33(parseBigDecimal(transform.get(11)));
+                                    }
                                 }
                                 brickList.add(brick);
                             }
@@ -753,32 +758,41 @@ public class BrkResourceServiceImpl implements IBrkResourceService
                 List<BrkBricksConnpoint> connpointList = new ArrayList<>();
                 if (modelData != null && modelData.getInstance() != null)
                 {
-                    Map<String, Object[]> connpointMap = modelData.getInstance().getConnpoint();
+                    Map<String, JSONArray> connpointMap = modelData.getInstance().getConnpoint();
                     if (connpointMap != null)
                     {
-                        for (Map.Entry<String, Object[]> connEntry : connpointMap.entrySet())
+                        for (Map.Entry<String, JSONArray> connEntry : connpointMap.entrySet())
                         {
-                            Object[] connData = connEntry.getValue();
-                            if (connData != null && connData.length >= 5)
+                            JSONArray connData = connEntry.getValue();
+                            if (connData != null && connData.size() >= 5)
                             {
                                 BrkBricksConnpoint connpoint = new BrkBricksConnpoint();
                                 connpoint.setConnIndex(Integer.parseInt(connEntry.getKey()));
-                                connpoint.setConnType(String.valueOf(connData[0]));
-                                connpoint.setStudType(String.valueOf(connData[1]));
+                                connpoint.setConnType(String.valueOf(connData.get(0)));
+                                connpoint.setStudType(String.valueOf(connData.get(1)));
 
-                                Object[] pos = (Object[]) connData[2];
-                                Object[] normal = (Object[]) connData[3];
-                                if (pos != null && pos.length >= 3)
+                                Object posObj = connData.get(2);
+                                Object normalObj = connData.get(3);
+                                
+                                if (posObj instanceof JSONArray)
                                 {
-                                    connpoint.setX(parseBigDecimal(pos[0]));
-                                    connpoint.setY(parseBigDecimal(pos[1]));
-                                    connpoint.setZ(parseBigDecimal(pos[2]));
+                                    JSONArray pos = (JSONArray) posObj;
+                                    if (pos.size() >= 3)
+                                    {
+                                        connpoint.setX(parseBigDecimal(pos.get(0)));
+                                        connpoint.setY(parseBigDecimal(pos.get(1)));
+                                        connpoint.setZ(parseBigDecimal(pos.get(2)));
+                                    }
                                 }
-                                if (normal != null && normal.length >= 3)
+                                if (normalObj instanceof JSONArray)
                                 {
-                                    connpoint.setNx(parseBigDecimal(normal[0]));
-                                    connpoint.setNy(parseBigDecimal(normal[1]));
-                                    connpoint.setNz(parseBigDecimal(normal[2]));
+                                    JSONArray normal = (JSONArray) normalObj;
+                                    if (normal.size() >= 3)
+                                    {
+                                        connpoint.setNx(parseBigDecimal(normal.get(0)));
+                                        connpoint.setNy(parseBigDecimal(normal.get(1)));
+                                        connpoint.setNz(parseBigDecimal(normal.get(2)));
+                                    }
                                 }
                                 connpointList.add(connpoint);
                             }

@@ -1,7 +1,9 @@
 package com.ruoyi.bricks.domain;
 
+import java.util.List;
 import java.util.Map;
 import com.alibaba.fastjson2.annotation.JSONField;
+import com.alibaba.fastjson2.JSONArray;
 
 /**
  * 发型/积木模型数据解析
@@ -143,14 +145,14 @@ public class HairData
         /** 网格 */
         private Map<String, Object> mesh;
 
-        /** 积木 */
-        private Map<String, Object[]> brick;
+        /** 积木 - 使用JSONArray兼容FastJSON2 */
+        private Map<String, JSONArray> brick;
 
         /** 分组 */
-        private Map<String, Object[]> group;
+        private Map<String, JSONArray> group;
 
         /** 连接点 */
-        private Map<String, Object[]> connpoint;
+        private Map<String, JSONArray> connpoint;
 
         public Map<String, Object> getMesh()
         {
@@ -162,32 +164,32 @@ public class HairData
             this.mesh = mesh;
         }
 
-        public Map<String, Object[]> getBrick()
+        public Map<String, JSONArray> getBrick()
         {
             return brick;
         }
 
-        public void setBrick(Map<String, Object[]> brick)
+        public void setBrick(Map<String, JSONArray> brick)
         {
             this.brick = brick;
         }
 
-        public Map<String, Object[]> getGroup()
+        public Map<String, JSONArray> getGroup()
         {
             return group;
         }
 
-        public void setGroup(Map<String, Object[]> group)
+        public void setGroup(Map<String, JSONArray> group)
         {
             this.group = group;
         }
 
-        public Map<String, Object[]> getConnpoint()
+        public Map<String, JSONArray> getConnpoint()
         {
             return connpoint;
         }
 
-        public void setConnpoint(Map<String, Object[]> connpoint)
+        public void setConnpoint(Map<String, JSONArray> connpoint)
         {
             this.connpoint = connpoint;
         }
