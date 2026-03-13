@@ -76,8 +76,6 @@ public class BrkBricksController extends BaseController
     public AjaxResult getLdrContent(@PathVariable("bricksId") Long bricksId)
     {
         List<String> ldrContent = brkBricksService.generateLdrContent(bricksId);
-        AjaxResult result = new AjaxResult();
-        result.put(AjaxResult.DATA_TAG, ldrContent);
-        return result;
+        return AjaxResult.success("操作成功", ldrContent);
     }
 }
