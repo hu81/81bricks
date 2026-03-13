@@ -17,7 +17,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <resultMap id="BrkFaceBrkFaceLayerResult" type="BrkFace" extends="BrkFaceResult">
-        <collection property="brkFaceLayerList" ofType="BrkFaceLayer" column="face_id" select="selectBrkFaceLayerList" />
+        <collection property="layers" ofType="BrkFaceLayer" column="face_id" select="selectBrkFaceLayerList" />
     </resultMap>
 
     <resultMap type="BrkFaceLayer" id="BrkFaceLayerResult">

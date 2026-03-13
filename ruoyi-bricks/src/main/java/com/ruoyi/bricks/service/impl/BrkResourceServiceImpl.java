@@ -341,6 +341,13 @@ public class BrkResourceServiceImpl implements IBrkResourceService
 
                 List<BrkFaceLayer> layerList = new ArrayList<>();
 
+                java.util.HashMap<String, String> layerTypeMap = new java.util.HashMap<>();
+                layerTypeMap.put("眼睛", "eye");
+                layerTypeMap.put("眉毛", "eyebrow");
+                layerTypeMap.put("嘴巴", "mouth");
+                layerTypeMap.put("眼镜", "glasses");
+                layerTypeMap.put("贴纸", "sticker");
+
                 String[] layerTypes = {"嘴巴", "眼睛", "眉毛", "眼镜", "贴纸"};
                 for (String layerType : layerTypes)
                 {
@@ -372,7 +379,7 @@ public class BrkResourceServiceImpl implements IBrkResourceService
                         {
                             BrkFaceLayer layer = new BrkFaceLayer();
                             layer.setFaceId(faceId);
-                            layer.setLayerType(layerType);
+                            layer.setLayerType(layerTypeMap.get(layerType));
                             layer.setData(imageData);
                             layer.setX(null);
                             layer.setY(null);

@@ -35,8 +35,8 @@ public class BrkFace extends BaseEntity
     @Excel(name = "表情链接")
     private String originUrl;
 
-    /** 情图层信息 */
-    private List<BrkFaceLayer> brkFaceLayerList;
+    /** 图层信息 */
+    private List<BrkFaceLayer> layers;
 
     public void setFaceId(Long faceId) 
     {
@@ -88,14 +88,14 @@ public class BrkFace extends BaseEntity
         return originUrl;
     }
 
-    public List<BrkFaceLayer> getBrkFaceLayerList()
+    public List<BrkFaceLayer> getLayers()
     {
-        return brkFaceLayerList;
+        return layers;
     }
 
-    public void setBrkFaceLayerList(List<BrkFaceLayer> brkFaceLayerList)
+    public void setLayers(List<BrkFaceLayer> layers)
     {
-        this.brkFaceLayerList = brkFaceLayerList;
+        this.layers = layers;
     }
 
     @Override
@@ -110,7 +110,7 @@ public class BrkFace extends BaseEntity
             .append("createTime", getCreateTime())
             .append("updateBy", getUpdateBy())
             .append("updateTime", getUpdateTime())
-            .append("brkFaceLayerList", getBrkFaceLayerList())
+            .append("layers", getLayers())
             .toString();
     }
 }

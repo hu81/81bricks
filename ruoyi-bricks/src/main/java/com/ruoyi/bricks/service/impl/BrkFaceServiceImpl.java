@@ -48,7 +48,7 @@ public class BrkFaceServiceImpl implements IBrkFaceService
         List<BrkFace> list = brkFaceMapper.selectBrkFaceList(brkFace);
         for (BrkFace face : list)
         {
-            face.setBrkFaceLayerList(brkFaceMapper.selectBrkFaceLayerList(face.getFaceId()));
+            face.setLayers(brkFaceMapper.selectBrkFaceLayerList(face.getFaceId()));
         }
         return list;
     }
@@ -79,6 +79,12 @@ public class BrkFaceServiceImpl implements IBrkFaceService
     @Override
     public int updateBrkFace(BrkFace brkFace)
     {
+        BrkFace existingFace = brkFaceMapper.selectBrkFaceByFaceId(brkFace.getFaceId());
+        if (existingFace != null)
+        {
+            brkFace.setOriginId(existingFace.getOriginId());
+            brkFace.setOriginUrl(existingFace.getOriginUrl());
+        }
         brkFace.setUpdateTime(DateUtils.getNowDate());
         brkFaceMapper.deleteBrkFaceLayerByFaceId(brkFace.getFaceId());
         insertBrkFaceLayer(brkFace);
@@ -120,15 +126,15 @@ public class BrkFaceServiceImpl implements IBrkFaceService
      */
     public void insertBrkFaceLayer(BrkFace brkFace)
     {
-        List<BrkFaceLayer> brkFaceLayerList = brkFace.getBrkFaceLayerList();
+        List<BrkFaceLayer> layers = brkFace.getLayers();
         Long faceId = brkFace.getFaceId();
-        if (StringUtils.isNotNull(brkFaceLayerList))
+        if (StringUtils.isNotNull(layers))
         {
             List<BrkFaceLayer> list = new ArrayList<BrkFaceLayer>();
-            for (BrkFaceLayer brkFaceLayer : brkFaceLayerList)
+            for (BrkFaceLayer layer : layers)
             {
-                brkFaceLayer.setFaceId(faceId);
-                list.add(brkFaceLayer);
+                layer.setFaceId(faceId);
+                list.add(layer);
             }
             if (list.size() > 0)
             {
