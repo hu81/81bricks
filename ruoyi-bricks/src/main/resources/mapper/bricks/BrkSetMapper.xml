@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.bricks.mapper.BrkSetMapper">
+    
+    <resultMap type="BrkSet" id="BrkSetResult">
+        <result property="setId"    column="set_id"    />
+        <result property="setName"    column="set_name"    />
+        <result property="uuid"    column="uuid"    />
+        <result property="assetType"    column="asset_type"    />
+        <result property="originId"    column="origin_id"    />
+        <result property="originUrl"    column="origin_url"    />
+        <result property="comments"    column="comments"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <resultMap type="BrkSetCategory" id="BrkSetCategoryResult">
+        <result property="categoryId"    column="category_id"    />
+        <result property="setId"    column="set_id"    />
+        <result property="categoryName"    column="category_name"    />
+        <result property="uuid"    column="uuid"    />
+        <result property="version"    column="version"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <resultMap type="BrkSetMesh" id="BrkSetMeshResult">
+        <result property="meshId"    column="mesh_id"    />
+        <result property="categoryId"    column="category_id"    />
+        <result property="meshIndex"    column="mesh_index"    />
+        <result property="refId"    column="ref_id"    />
+        <result property="partNumber"    column="part_number"    />
+        <result property="base"    column="base"    />
+        <result property="meshType"    column="mesh_type"    />
+        <result property="textureLeft"    column="texture_left"    />
+        <result property="textureRight"    column="texture_right"    />
+        <result property="textureTop"    column="texture_top"    />
+        <result property="textureBack"    column="texture_back"    />
+        <result property="textureBottom"    column="texture_bottom"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <sql id="selectBrkSetVo">
+        select set_id, set_name, uuid, asset_type, origin_id, origin_url, comments, create_by, create_time, update_by, update_time from brk_set
+    </sql>
+
+    <select id="selectBrkSetList" parameterType="BrkSet" resultMap="BrkSetResult">
+        <include refid="selectBrkSetVo"/>
+        <where>  
+            <if test="setName != null and setName != ''"> and set_name like concat('%', #{setName}, '%')</if>
+            <if test="uuid != null and uuid != ''"> and uuid = #{uuid}</if>
+            <if test="assetType != null and assetType != ''"> and asset_type = #{assetType}</if>
+            <if test="originId != null and originId != ''"> and origin_id = #{originId}</if>
+        </where>
+        order by update_time desc, set_id desc
+    </select>
+    
+    <select id="selectBrkSetBySetId" parameterType="Long" resultMap="BrkSetResult">
+        <include refid="selectBrkSetVo"/>
+        where set_id = #{setId}
+    </select>
+
+    <select id="selectBrkSetByUuid" parameterType="String" resultMap="BrkSetResult">
+        <include refid="selectBrkSetVo"/>
+        where uuid = #{uuid}
+    </select>
+
+    <select id="selectBrkSetByOriginId" parameterType="String" resultMap="BrkSetResult">
+        <include refid="selectBrkSetVo"/>
+        where origin_id = #{originId}
+    </select>
+
+    <select id="selectBrkSetCategoryList" parameterType="Long" resultMap="BrkSetCategoryResult">
+        select category_id, set_id, category_name, uuid, version, create_by, create_time, update_by, update_time
+        from brk_set_category
+        where set_id = #{setId}
+        order by category_id
+    </select>
+
+    <select id="selectBrkSetMeshList" parameterType="Long" resultMap="BrkSetMeshResult">
+        select mesh_id, category_id, mesh_index, ref_id, part_number, base, mesh_type, 
+               texture_left, texture_right, texture_top, texture_back, texture_bottom, create_by, create_time
+        from brk_set_mesh
+        where category_id = #{categoryId}
+        order by mesh_index
+    </select>
+
+    <insert id="insertBrkSet" parameterType="BrkSet" useGeneratedKeys="true" keyProperty="setId">
+        insert into brk_set
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="setName != null and setName != ''">set_name,</if>
+            <if test="uuid != null and uuid != ''">uuid,</if>
+            <if test="assetType != null and assetType != ''">asset_type,</if>
+            <if test="originId != null">origin_id,</if>
+            <if test="originUrl != null">origin_url,</if>
+            <if test="comments != null">comments,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="setName != null and setName != ''">#{setName},</if>
+            <if test="uuid != null and uuid != ''">#{uuid},</if>
+            <if test="assetType != null and assetType != ''">#{assetType},</if>
+            <if test="originId != null">#{originId},</if>
+            <if test="originUrl != null">#{originUrl},</if>
+            <if test="comments != null">#{comments},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateBrkSet" parameterType="BrkSet">
+        update brk_set
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="setName != null and setName != ''">set_name = #{setName},</if>
+            <if test="uuid != null and uuid != ''">uuid = #{uuid},</if>
+            <if test="assetType != null and assetType != ''">asset_type = #{assetType},</if>
+            <if test="originId != null">origin_id = #{originId},</if>
+            <if test="originUrl != null">origin_url = #{originUrl},</if>
+            <if test="comments != null">comments = #{comments},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where set_id = #{setId}
+    </update>
+
+    <delete id="deleteBrkSetBySetId" parameterType="Long">
+        delete from brk_set where set_id = #{setId}
+    </delete>
+
+    <delete id="deleteBrkSetBySetIds" parameterType="String">
+        delete from brk_set where set_id in 
+        <foreach item="setId" collection="array" open="(" separator="," close=")">
+            #{setId}
+        </foreach>
+    </delete>
+
+    <insert id="batchBrkSetCategory">
+        insert into brk_set_category( set_id, category_name, uuid, version, create_by, create_time) values
+        <foreach item="item" index="index" collection="list" separator=",">
+            ( #{item.setId}, #{item.categoryName}, #{item.uuid}, #{item.version}, #{item.createBy}, #{item.createTime})
+        </foreach>
+    </insert>
+
+    <delete id="deleteBrkSetCategoryBySetId" parameterType="Long">
+        delete from brk_set_category where set_id = #{setId}
+    </delete>
+
+    <insert id="batchBrkSetMesh">
+        insert into brk_set_mesh( category_id, mesh_index, ref_id, part_number, base, mesh_type, 
+            texture_left, texture_right, texture_top, texture_back, texture_bottom, create_by, create_time) values
+        <foreach item="item" index="index" collection="list" separator=",">
+            ( #{item.categoryId}, #{item.meshIndex}, #{item.refId}, #{item.partNumber}, #{item.base}, #{item.meshType},
+              #{item.textureLeft}, #{item.textureRight}, #{item.textureTop}, #{item.textureBack}, #{item.textureBottom}, 
+              #{item.createBy}, #{item.createTime})
+        </foreach>
+    </insert>
+
+    <delete id="deleteBrkSetMeshByCategoryId" parameterType="Long">
+        delete from brk_set_mesh where category_id = #{categoryId}
+    </delete>
+
+    <delete id="deleteBrkSetMeshBySetId" parameterType="Long">
+        delete from brk_set_mesh where category_id in (select category_id from brk_set_category where set_id = #{setId})
+    </delete>
+</mapper>

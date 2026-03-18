@@ -4,6 +4,7 @@ import java.util.List;
 import com.ruoyi.bricks.domain.BrkBricks;
 import com.ruoyi.bricks.domain.BrkBricksBrick;
 import com.ruoyi.bricks.domain.BrkBricksConnpoint;
+import com.ruoyi.bricks.domain.BrkBricksMesh;
 
 /**
  * 积木模型Mapper接口
@@ -40,4 +41,10 @@ public interface BrkBricksMapper
     public int batchBrkBricksConnpoint(List<BrkBricksConnpoint> list);
 
     public int deleteBrkBricksConnpointByBricksId(Long bricksId);
+
+    public List<BrkBricksMesh> selectBrkBricksMeshList(Long bricksId);
+
+    public int batchBrkBricksMesh(List<BrkBricksMesh> list);
+
+    public int deleteBrkBricksMeshByBricksId(Long bricksId);
 }

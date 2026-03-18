@@ -253,7 +253,7 @@ public class BrkBricksBrick extends BaseEntity
             nvl(m11) + " " + nvl(m12) + " " + nvl(m13) + " " +
             nvl(m21) + " " + nvl(m22) + " " + nvl(m23) + " " +
             nvl(m31) + " " + nvl(m32) + " " + nvl(m33) + " " +
-            nvl(partNumber);
+            nvl(partNumber) + ".dat";
     }
 
     private String nvl(Object obj)

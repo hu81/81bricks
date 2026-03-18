@@ -49,6 +49,70 @@ create table brk_face_layer (
 
 
 -- ----------------------------
+-- Table structure for brk_set (套装表)
+-- ----------------------------
+drop table if exists brk_set;
+create table brk_set (
+  set_id             bigint(20)      not null auto_increment    comment '套装ID',
+  set_name            varchar(500)    not null                   comment '套装名称',
+  uuid               varchar(256)    default null               comment '套装UUID',
+  asset_type         varchar(50)     not null                   comment '资产类型(套装)',
+  origin_id          varchar(500)                               comment '原始ID',
+  origin_url         varchar(500)                               comment '原始链接',
+  comments           varchar(1024)                              comment '备注',
+  create_by          varchar(64)     default ''                 comment '创建者',
+  create_time        datetime                                   comment '创建时间',
+  update_by          varchar(64)     default ''                 comment '更新者',
+  update_time        datetime                                   comment '更新时间',
+  primary key (set_id)
+) engine=innodb auto_increment=1 comment = '套装表';
+
+
+-- ----------------------------
+-- Table structure for brk_set_category (套装分类表)
+-- ----------------------------
+drop table if exists brk_set_category;
+create table brk_set_category (
+  category_id        bigint(20)      not null auto_increment    comment '分类ID',
+  set_id              bigint(20)      not null                   comment '套装ID',
+  category_name       varchar(50)     not null                   comment '分类名称(tops/bottoms/shoes等)',
+  uuid               varchar(256)    not null                   comment '分类UUID',
+  version            varchar(20)     default 'v0'               comment '版本',
+  create_by          varchar(64)     default ''                 comment '创建者',
+  create_time        datetime                                   comment '创建时间',
+  update_by          varchar(64)     default ''                 comment '更新者',
+  update_time        datetime                                   comment '更新时间',
+  primary key (category_id),
+  key idx_set_id (set_id),
+  unique key uk_set_category (set_id, category_name)
+) engine=innodb auto_increment=1 comment = '套装分类表';
+
+
+-- ----------------------------
+-- Table structure for brk_set_mesh (套装网格/纹理表)
+-- ----------------------------
+drop table if exists brk_set_mesh;
+create table brk_set_mesh (
+  mesh_id            bigint(20)      not null auto_increment    comment '网格ID',
+  category_id        bigint(20)      not null                   comment '分类ID',
+  mesh_index          int             not null                   comment '网格索引',
+  ref_id             varchar(500)                               comment '纹理引用ID',
+  part_number        varchar(50)                                comment '零件号',
+  base               varchar(50)                                comment '基础零件号',
+  mesh_type          varchar(50)     default 'texface'           comment '网格类型',
+  texture_left       mediumtext                                  comment '左侧纹理',
+  texture_right      mediumtext                                  comment '右侧纹理',
+  texture_top        mediumtext                                  comment '顶部纹理',
+  texture_back       mediumtext                                  comment '背面纹理',
+  texture_bottom     mediumtext                                  comment '底部纹理',
+  create_by          varchar(64)     default ''                 comment '创建者',
+  create_time        datetime                                   comment '创建时间',
+  primary key (mesh_id),
+  key idx_category_id (category_id)
+) engine=innodb auto_increment=1 comment = '套装网格表';
+
+
+-- ----------------------------
 -- Table structure for brk_bricks (积木模型表)
 -- ----------------------------
 drop table if exists brk_bricks;
@@ -124,3 +188,25 @@ create table brk_bricks_connpoint (
   primary key (conn_id),
   key idx_bricks_id (bricks_id)
 ) engine=innodb auto_increment=1 comment = '积木模型连接点表';
+
+
+-- ----------------------------
+-- Table structure for brk_bricks_mesh (积木模型网格表)
+-- ----------------------------
+drop table if exists brk_bricks_mesh;
+create table brk_bricks_mesh (
+  mesh_id             bigint(20)      not null auto_increment    comment '网格ID',
+  bricks_id           bigint(20)      not null                   comment '积木模型ID',
+  mesh_index          int             not null                   comment '网格索引',
+  ref_id              varchar(500)                               comment '纹理引用ID',
+  part_number         varchar(50)                                comment '零件号',
+  base                varchar(50)                                comment '基础零件号',
+  mesh_type           varchar(50)     default 'texface'          comment '网格类型',
+  texture_left        mediumtext                                  comment '左侧纹理',
+  texture_right       mediumtext                                  comment '右侧纹理',
+  texture_top         mediumtext                                  comment '顶部纹理',
+  texture_back        mediumtext                                  comment '背面纹理',
+  texture_bottom      mediumtext                                  comment '底部纹理',
+  primary key (mesh_id),
+  key idx_bricks_id (bricks_id)
+) engine=innodb auto_increment=1 comment = '积木模型网格表';
