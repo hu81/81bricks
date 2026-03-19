@@ -92,6 +92,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by mesh_index
     </select>
 
+    <select id="selectBrkSetMeshByRefId" parameterType="String" resultMap="BrkSetMeshResult">
+        select mesh_id, category_id, mesh_index, ref_id, part_number, base, mesh_type, 
+               texture_left, texture_right, texture_top, texture_back, texture_bottom, create_by, create_time
+        from brk_set_mesh
+        where ref_id = #{refId}
+        limit 1
+    </select>
+
     <insert id="insertBrkSet" parameterType="BrkSet" useGeneratedKeys="true" keyProperty="setId">
         insert into brk_set
         <trim prefix="(" suffix=")" suffixOverrides=",">

@@ -65,6 +65,9 @@ public class BrkBricks extends BaseEntity
     /** 连接点列表 */
     private List<BrkBricksConnpoint> connpoints;
 
+    /** LDR数据 */
+    private List<String> ldrData;
+
     public void setBricksId(Long bricksId) 
     {
         this.bricksId = bricksId;
@@ -195,6 +198,16 @@ public class BrkBricks extends BaseEntity
         this.connpoints = connpoints;
     }
 
+    public List<String> getLdrData()
+    {
+        return ldrData;
+    }
+
+    public void setLdrData(List<String> ldrData)
+    {
+        this.ldrData = ldrData;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
@@ -208,13 +221,14 @@ public class BrkBricks extends BaseEntity
             .append("defaultColor", getDefaultColor())
             .append("originId", getOriginId())
             .append("originUrl", getOriginUrl())
-            .append("comments", getComments())
-            .append("createBy", getCreateBy())
-            .append("createTime", getCreateTime())
-            .append("updateBy", getUpdateBy())
-            .append("updateTime", getUpdateTime())
-            .append("bricks", getBricks())
-            .append("connpoints", getConnpoints())
-            .toString();
+        .append("comments", getComments())
+        .append("createBy", getCreateBy())
+        .append("createTime", getCreateTime())
+        .append("updateBy", getUpdateBy())
+        .append("updateTime", getUpdateTime())
+        .append("bricks", getBricks())
+        .append("connpoints", getConnpoints())
+        .append("ldrData", getLdrData())
+        .toString();
     }
 }

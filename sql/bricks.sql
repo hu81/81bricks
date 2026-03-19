@@ -108,7 +108,8 @@ create table brk_set_mesh (
   create_by          varchar(64)     default ''                 comment '创建者',
   create_time        datetime                                   comment '创建时间',
   primary key (mesh_id),
-  key idx_category_id (category_id)
+  key idx_category_id (category_id),
+  key idx_ref_id (ref_id)
 ) engine=innodb auto_increment=1 comment = '套装网格表';
 
 

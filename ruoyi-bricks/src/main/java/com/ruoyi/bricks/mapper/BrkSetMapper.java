@@ -37,6 +37,8 @@ public interface BrkSetMapper
 
     public List<BrkSetMesh> selectBrkSetMeshList(Long categoryId);
 
+    public BrkSetMesh selectBrkSetMeshByRefId(String refId);
+
     public int batchBrkSetMesh(List<BrkSetMesh> list);
 
     public int deleteBrkSetMeshByCategoryId(Long categoryId);

@@ -66,6 +66,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectBrkBricksList" parameterType="BrkBricks" resultMap="BrkBricksResult">
         <include refid="selectBrkBricksVo"/>
         <where>  
+            <if test="bricksId != null"> and bricks_id = #{bricksId}</if>
             <if test="bricksName != null  and bricksName != ''"> and bricks_name like concat('%', #{bricksName}, '%')</if>
             <if test="uuid != null  and uuid != ''"> and uuid = #{uuid}</if>
             <if test="assetType != null  and assetType != ''"> and asset_type = #{assetType}</if>

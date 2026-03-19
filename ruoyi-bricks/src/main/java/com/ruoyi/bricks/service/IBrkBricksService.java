@@ -19,6 +19,8 @@ public interface IBrkBricksService
 
     public List<BrkBricks> selectBrkBricksList(BrkBricks brkBricks);
 
+    public List<BrkBricks> selectBrkBricksListWithLdrData(BrkBricks brkBricks);
+
     public int insertBrkBricks(BrkBricks brkBricks);
 
     public int updateBrkBricks(BrkBricks brkBricks);
@@ -28,4 +30,8 @@ public interface IBrkBricksService
     public int deleteBrkBricksByBricksIds(Long[] bricksIds);
 
     public List<String> generateLdrContent(Long bricksId);
+
+    public List<String> generateLdrContent(Long bricksId, boolean replaceDefaultColor, boolean useOriginalParts);
+
+    public List<String> generateLdrContent(Long bricksId, boolean replaceDefaultColor, boolean useOriginalParts, boolean removeAbnormalParts);
 }

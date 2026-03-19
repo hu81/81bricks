@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
@@ -37,7 +38,7 @@ public class BrkBricksController extends BaseController
     public TableDataInfo list(BrkBricks brkBricks)
     {
         startPage();
-        List<BrkBricks> list = brkBricksService.selectBrkBricksList(brkBricks);
+        List<BrkBricks> list = brkBricksService.selectBrkBricksListWithLdrData(brkBricks);
         return getDataTable(list);
     }
 
@@ -73,9 +74,13 @@ public class BrkBricksController extends BaseController
     }
 
     @GetMapping("/ldr/{bricksId}")
-    public AjaxResult getLdrContent(@PathVariable("bricksId") Long bricksId)
+    public AjaxResult getLdrContent(
+            @PathVariable("bricksId") Long bricksId,
+            @RequestParam(value = "replaceDefaultColor", defaultValue = "true") boolean replaceDefaultColor,
+            @RequestParam(value = "useOriginalParts", defaultValue = "true") boolean useOriginalParts,
+            @RequestParam(value = "removeAbnormalParts", defaultValue = "false") boolean removeAbnormalParts)
     {
-        List<String> ldrContent = brkBricksService.generateLdrContent(bricksId);
+        List<String> ldrContent = brkBricksService.generateLdrContent(bricksId, replaceDefaultColor, useOriginalParts, removeAbnormalParts);
         return AjaxResult.success("操作成功", ldrContent);
     }
 }
