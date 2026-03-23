@@ -194,7 +194,7 @@ public class BrkResourceServiceImpl implements IBrkResourceService
 
             if (libraryInfo.getConfig() != null && libraryInfo.getConfig().getAssetInfo() != null)
             {
-//                saveBricksModels(libraryInfo);
+                saveBricksModels(libraryInfo);
                 saveSetModels(libraryInfo);
             }
 
@@ -788,46 +788,7 @@ public class BrkResourceServiceImpl implements IBrkResourceService
                 List<BrkBricksConnpoint> connpointList = new ArrayList<>();
                 if (modelData != null && modelData.getInstance() != null)
                 {
-                    Map<String, JSONArray> connpointMap = modelData.getInstance().getConnpoint();
-                    if (connpointMap != null)
-                    {
-                        for (Map.Entry<String, JSONArray> connEntry : connpointMap.entrySet())
-                        {
-                            JSONArray connData = connEntry.getValue();
-                            if (connData != null && connData.size() >= 5)
-                            {
-                                BrkBricksConnpoint connpoint = new BrkBricksConnpoint();
-                                connpoint.setConnIndex(Integer.parseInt(connEntry.getKey()));
-                                connpoint.setConnType(String.valueOf(connData.get(0)));
-                                connpoint.setStudType(String.valueOf(connData.get(1)));
-
-                                Object posObj = connData.get(2);
-                                Object normalObj = connData.get(3);
-                                
-                                if (posObj instanceof JSONArray)
-                                {
-                                    JSONArray pos = (JSONArray) posObj;
-                                    if (pos.size() >= 3)
-                                    {
-                                        connpoint.setX(parseBigDecimal(pos.get(0)));
-                                        connpoint.setY(parseBigDecimal(pos.get(1)));
-                                        connpoint.setZ(parseBigDecimal(pos.get(2)));
-                                    }
-                                }
-                                if (normalObj instanceof JSONArray)
-                                {
-                                    JSONArray normal = (JSONArray) normalObj;
-                                    if (normal.size() >= 3)
-                                    {
-                                        connpoint.setNx(parseBigDecimal(normal.get(0)));
-                                        connpoint.setNy(parseBigDecimal(normal.get(1)));
-                                        connpoint.setNz(parseBigDecimal(normal.get(2)));
-                                    }
-                                }
-                                connpointList.add(connpoint);
-                            }
-                        }
-                    }
+                    connpointList = parseConnpointsFromJSONArray(modelData.getInstance().getConnpoint());
                 }
 
                 brkBricks.setBricks(brickList);
@@ -846,42 +807,7 @@ public class BrkResourceServiceImpl implements IBrkResourceService
                 List<BrkBricksGroup> groupList = new ArrayList<>();
                 if (modelData != null && modelData.getInstance() != null)
                 {
-                    Map<String, JSONArray> groupMap = modelData.getInstance().getGroup();
-                    if (groupMap != null && !groupMap.isEmpty())
-                    {
-                        for (Map.Entry<String, JSONArray> groupEntry : groupMap.entrySet())
-                        {
-                            JSONArray groupData = groupEntry.getValue();
-                            if (groupData != null && groupData.size() >= 3)
-                            {
-                                BrkBricksGroup group = new BrkBricksGroup();
-                                group.setGroupIndex(Integer.parseInt(groupEntry.getKey()));
-                                group.setGroupName(String.valueOf(groupData.get(0)));
-
-                                Object transformObj = groupData.get(1);
-                                if (transformObj instanceof JSONArray)
-                                {
-                                    JSONArray transform = (JSONArray) transformObj;
-                                    if (transform.size() >= 12)
-                                    {
-                                        group.setX(parseBigDecimal(transform.get(0)));
-                                        group.setY(parseBigDecimal(transform.get(1)));
-                                        group.setZ(parseBigDecimal(transform.get(2)));
-                                        group.setM11(parseBigDecimal(transform.get(3)));
-                                        group.setM12(parseBigDecimal(transform.get(4)));
-                                        group.setM13(parseBigDecimal(transform.get(5)));
-                                        group.setM21(parseBigDecimal(transform.get(6)));
-                                        group.setM22(parseBigDecimal(transform.get(7)));
-                                        group.setM23(parseBigDecimal(transform.get(8)));
-                                        group.setM31(parseBigDecimal(transform.get(9)));
-                                        group.setM32(parseBigDecimal(transform.get(10)));
-                                        group.setM33(parseBigDecimal(transform.get(11)));
-                                    }
-                                }
-                                groupList.add(group);
-                            }
-                        }
-                    }
+                    groupList = parseGroupsFromJSONArray(modelData.getInstance().getGroup());
                 }
 
                 brkBricks.setGroups(groupList);
@@ -1265,6 +1191,7 @@ public class BrkResourceServiceImpl implements IBrkResourceService
 
             brkBricks.setBricks(brickList);
             brkBricks.setConnpoints(category.getConnpoints());
+            brkBricks.setGroups(category.getGroups());
             brkBricksService.insertBrkBricks(brkBricks);
 
             log.info("Inserted bricks for category: {} with {} bricks, {} connpoints", bricksName, brickList.size(), category.getConnpoints() != null ? category.getConnpoints().size() : 0);
@@ -1371,6 +1298,95 @@ public class BrkResourceServiceImpl implements IBrkResourceService
     }
 
     @SuppressWarnings("unchecked")
+    private List<BrkBricksConnpoint> parseConnpointsFromJSONArray(Map<String, JSONArray> connpointMap)
+    {
+        List<BrkBricksConnpoint> connpointList = new ArrayList<>();
+        if (connpointMap == null)
+        {
+            return connpointList;
+        }
+        for (Map.Entry<String, JSONArray> connEntry : connpointMap.entrySet())
+        {
+            JSONArray connData = connEntry.getValue();
+            if (connData != null && connData.size() >= 5)
+            {
+                BrkBricksConnpoint connpoint = new BrkBricksConnpoint();
+                connpoint.setConnIndex(Integer.parseInt(connEntry.getKey()));
+                connpoint.setConnType(String.valueOf(connData.get(0)));
+                connpoint.setStudType(String.valueOf(connData.get(1)));
+
+                Object posObj = connData.get(2);
+                Object normalObj = connData.get(3);
+
+                if (posObj instanceof JSONArray)
+                {
+                    JSONArray pos = (JSONArray) posObj;
+                    if (pos.size() >= 3)
+                    {
+                        connpoint.setX(parseBigDecimal(pos.get(0)));
+                        connpoint.setY(parseBigDecimal(pos.get(1)));
+                        connpoint.setZ(parseBigDecimal(pos.get(2)));
+                    }
+                }
+                if (normalObj instanceof JSONArray)
+                {
+                    JSONArray normal = (JSONArray) normalObj;
+                    if (normal.size() >= 3)
+                    {
+                        connpoint.setNx(parseBigDecimal(normal.get(0)));
+                        connpoint.setNy(parseBigDecimal(normal.get(1)));
+                        connpoint.setNz(parseBigDecimal(normal.get(2)));
+                    }
+                }
+                connpointList.add(connpoint);
+            }
+        }
+        return connpointList;
+    }
+
+    private List<BrkBricksGroup> parseGroupsFromJSONArray(Map<String, JSONArray> groupMap)
+    {
+        List<BrkBricksGroup> groupList = new ArrayList<>();
+        if (groupMap == null || groupMap.isEmpty())
+        {
+            return groupList;
+        }
+        for (Map.Entry<String, JSONArray> groupEntry : groupMap.entrySet())
+        {
+            JSONArray groupData = groupEntry.getValue();
+            if (groupData != null && groupData.size() >= 2)
+            {
+                BrkBricksGroup group = new BrkBricksGroup();
+                group.setGroupIndex(Integer.parseInt(groupEntry.getKey()));
+                group.setGroupName(String.valueOf(groupData.get(0)));
+
+                Object transformObj = groupData.get(1);
+                if (transformObj instanceof JSONArray)
+                {
+                    JSONArray transform = (JSONArray) transformObj;
+                    if (transform.size() >= 12)
+                    {
+                        group.setX(parseBigDecimal(transform.get(0)));
+                        group.setY(parseBigDecimal(transform.get(1)));
+                        group.setZ(parseBigDecimal(transform.get(2)));
+                        group.setM11(parseBigDecimal(transform.get(3)));
+                        group.setM12(parseBigDecimal(transform.get(4)));
+                        group.setM13(parseBigDecimal(transform.get(5)));
+                        group.setM21(parseBigDecimal(transform.get(6)));
+                        group.setM22(parseBigDecimal(transform.get(7)));
+                        group.setM23(parseBigDecimal(transform.get(8)));
+                        group.setM31(parseBigDecimal(transform.get(9)));
+                        group.setM32(parseBigDecimal(transform.get(10)));
+                        group.setM33(parseBigDecimal(transform.get(11)));
+                    }
+                }
+                groupList.add(group);
+            }
+        }
+        return groupList;
+    }
+
+    @SuppressWarnings("unchecked")
     private List<BrkBricksConnpoint> parseSetConnpoints(Map<String, Object> connpointMap)
     {
         List<BrkBricksConnpoint> connpointList = new ArrayList<>();
@@ -1456,7 +1472,7 @@ public class BrkResourceServiceImpl implements IBrkResourceService
                 }
 
                 List<?> groupData = (List<?>) groupValue;
-                if (groupData.size() < 3)
+                if (groupData.size() < 2)
                 {
                     continue;
                 }

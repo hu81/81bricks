@@ -218,8 +218,11 @@ public class BrkSetServiceImpl implements IBrkSetService
             rootModel = categoryModels.values().iterator().next().get(0);
         }
 
-        mergedLines.addAll(brkBricksService.generateLdrContent(rootModel.getBricksId(), replaceDefaultColor, useOriginalParts, removeAbnormalParts));
+        mergedLines.addAll(brkBricksService.generateLdrContent(rootModel.getBricksId(), replaceDefaultColor, useOriginalParts, removeAbnormalParts, true));
         processedModels.put(rootModel.getCategory(), rootModel);
+
+        Map<String, double[]> cumulativeOffsets = new HashMap<>();
+        cumulativeOffsets.put(rootModel.getCategory(), new double[]{0.0, 0.0, 0.0});
 
         List<String[]> connectionOrder = getConnectionOrder(includeHandheld);
 
@@ -245,6 +248,11 @@ public class BrkSetServiceImpl implements IBrkSetService
                         continue;
                     }
 
+                    double[] parentOffset = cumulativeOffsets.get(fromCategory);
+                    double parentOffsetX = parentOffset != null ? parentOffset[0] : 0.0;
+                    double parentOffsetY = parentOffset != null ? parentOffset[1] : 0.0;
+                    double parentOffsetZ = parentOffset != null ? parentOffset[2] : 0.0;
+
                     BrkBricksConnpoint tubeConn = findConnPointByType(parentModel, "tube");
                     BrkBricksConnpoint studConn = findConnPointByType(childModel, "stud");
 
@@ -256,8 +264,13 @@ public class BrkSetServiceImpl implements IBrkSetService
                         offsetZ = tubeConn.getZ().doubleValue() - studConn.getZ().doubleValue();
                     }
 
-                    mergedLines.addAll(brkBricksService.generateLdrContent(childModel.getBricksId(), replaceDefaultColor, useOriginalParts, removeAbnormalParts, offsetX, offsetY, offsetZ));
+                    double totalOffsetX = parentOffsetX + offsetX;
+                    double totalOffsetY = parentOffsetY + offsetY;
+                    double totalOffsetZ = parentOffsetZ + offsetZ;
+
+                    mergedLines.addAll(brkBricksService.generateLdrContent(childModel.getBricksId(), replaceDefaultColor, useOriginalParts, removeAbnormalParts, totalOffsetX, totalOffsetY, totalOffsetZ, true));
                     processedModels.put(childModel.getCategory(), childModel);
+                    cumulativeOffsets.put(childModel.getCategory(), new double[]{totalOffsetX, totalOffsetY, totalOffsetZ});
                 }
             }
         }

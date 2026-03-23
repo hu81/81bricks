@@ -56,6 +56,7 @@ public class BrkBricksServiceImpl implements IBrkBricksService
         {
             bricks.setBricks(brkBricksMapper.selectBrkBricksBrickList(bricksId));
             bricks.setConnpoints(brkBricksMapper.selectBrkBricksConnpointList(bricksId));
+            bricks.setGroups(brkBricksGroupMapper.selectBrkBricksGroupList(bricksId));
         }
         return bricks;
     }
@@ -68,6 +69,7 @@ public class BrkBricksServiceImpl implements IBrkBricksService
         {
             bricks.setBricks(brkBricksMapper.selectBrkBricksBrickList(bricks.getBricksId()));
             bricks.setConnpoints(brkBricksMapper.selectBrkBricksConnpointList(bricks.getBricksId()));
+            bricks.setGroups(brkBricksGroupMapper.selectBrkBricksGroupList(bricks.getBricksId()));
         }
         return bricks;
     }
@@ -191,24 +193,38 @@ public class BrkBricksServiceImpl implements IBrkBricksService
     @Override
     public List<String> generateLdrContent(Long bricksId)
     {
-        return generateLdrContent(bricksId, false, false, false, null, null, null);
+        return generateLdrContent(bricksId, false, false, false, null, null, null, false);
     }
 
     @Override
     public List<String> generateLdrContent(Long bricksId, boolean replaceDefaultColor, boolean useOriginalParts)
     {
-        return generateLdrContent(bricksId, replaceDefaultColor, useOriginalParts, false, null, null, null);
+        return generateLdrContent(bricksId, replaceDefaultColor, useOriginalParts, false, null, null, null, false);
     }
 
     @Override
     public List<String> generateLdrContent(Long bricksId, boolean replaceDefaultColor, boolean useOriginalParts, boolean removeAbnormalParts)
     {
-        return generateLdrContent(bricksId, replaceDefaultColor, useOriginalParts, removeAbnormalParts, null, null, null);
+        return generateLdrContent(bricksId, replaceDefaultColor, useOriginalParts, removeAbnormalParts, null, null, null, false);
+    }
+
+    @Override
+    public List<String> generateLdrContent(Long bricksId, boolean replaceDefaultColor, boolean useOriginalParts, boolean removeAbnormalParts,
+            boolean translateByGroup)
+    {
+        return generateLdrContent(bricksId, replaceDefaultColor, useOriginalParts, removeAbnormalParts, null, null, null, translateByGroup);
     }
 
     @Override
     public List<String> generateLdrContent(Long bricksId, boolean replaceDefaultColor, boolean useOriginalParts, boolean removeAbnormalParts,
             Double offsetX, Double offsetY, Double offsetZ)
+    {
+        return generateLdrContent(bricksId, replaceDefaultColor, useOriginalParts, removeAbnormalParts, offsetX, offsetY, offsetZ, false);
+    }
+
+    @Override
+    public List<String> generateLdrContent(Long bricksId, boolean replaceDefaultColor, boolean useOriginalParts, boolean removeAbnormalParts,
+            Double offsetX, Double offsetY, Double offsetZ, boolean translateByGroup)
     {
         List<String> lines = new ArrayList<>();
         BrkBricks bricks = selectBrkBricksByBricksId(bricksId);
@@ -220,6 +236,36 @@ public class BrkBricksServiceImpl implements IBrkBricksService
         if (offsetX == null) offsetX = 0.0;
         if (offsetY == null) offsetY = 0.0;
         if (offsetZ == null) offsetZ = 0.0;
+
+        double groupOffsetX = 0.0;
+        double groupOffsetY = 0.0;
+        double groupOffsetZ = 0.0;
+
+        if (translateByGroup && bricks.getGroups() != null && !bricks.getGroups().isEmpty())
+        {
+            BrkBricksGroup maxGroup = null;
+            int maxGroupIndex = Integer.MIN_VALUE;
+
+            for (BrkBricksGroup group : bricks.getGroups())
+            {
+                if (group.getGroupIndex() != null && group.getGroupIndex() > maxGroupIndex)
+                {
+                    maxGroupIndex = group.getGroupIndex();
+                    maxGroup = group;
+                }
+            }
+
+            if (maxGroup != null)
+            {
+                groupOffsetX = maxGroup.getX() != null ? maxGroup.getX().doubleValue() : 0.0;
+                groupOffsetY = maxGroup.getY() != null ? maxGroup.getY().doubleValue() : 0.0;
+                groupOffsetZ = maxGroup.getZ() != null ? maxGroup.getZ().doubleValue() : 0.0;
+            }
+        }
+
+        double totalOffsetX = groupOffsetX + offsetX;
+        double totalOffsetY = groupOffsetY + offsetY;
+        double totalOffsetZ = groupOffsetZ + offsetZ;
 
         Map<String, String> meshRefMap = new HashMap<>();
         if (useOriginalParts)
@@ -240,7 +286,7 @@ public class BrkBricksServiceImpl implements IBrkBricksService
             defaultColor = bricks.getDefaultColor();
         }
 
-        if (offsetX == 0.0 && offsetY == 0.0 && offsetZ == 0.0)
+        if (totalOffsetX == 0.0 && totalOffsetY == 0.0 && totalOffsetZ == 0.0)
         {
             lines.add("0 Name: " + bricks.getBricksName());
             lines.add("0 Comment: Generated from brk_bricks");
@@ -320,9 +366,9 @@ public class BrkBricksServiceImpl implements IBrkBricksService
                 }
             }
 
-            double x = (brick.getX() != null ? brick.getX().doubleValue() : 0.0) + offsetX;
-            double y = (brick.getY() != null ? brick.getY().doubleValue() : 0.0) + offsetY;
-            double z = (brick.getZ() != null ? brick.getZ().doubleValue() : 0.0) + offsetZ;
+            double x = (brick.getX() != null ? brick.getX().doubleValue() : 0.0) + totalOffsetX;
+            double y = (brick.getY() != null ? brick.getY().doubleValue() : 0.0) + totalOffsetY;
+            double z = (brick.getZ() != null ? brick.getZ().doubleValue() : 0.0) + totalOffsetZ;
 
             String ldrLine = String.format("1 %s %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %s.dat",
                     processedBrick.getColorId() != null ? processedBrick.getColorId() : "0",
