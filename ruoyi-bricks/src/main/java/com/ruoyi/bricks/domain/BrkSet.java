@@ -45,6 +45,9 @@ public class BrkSet extends BaseEntity
     /** 分类列表 */
     private java.util.List<BrkSetCategory> categories;
 
+    /** LDR数据 */
+    private java.util.List<String> ldrData;
+
     public void setSetId(Long setId) 
     {
         this.setId = setId;
@@ -123,6 +126,16 @@ public class BrkSet extends BaseEntity
     public void setCategories(java.util.List<BrkSetCategory> categories)
     {
         this.categories = categories;
+    }
+
+    public java.util.List<String> getLdrData()
+    {
+        return ldrData;
+    }
+
+    public void setLdrData(java.util.List<String> ldrData)
+    {
+        this.ldrData = ldrData;
     }
 
     @Override

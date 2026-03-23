@@ -100,6 +100,7 @@ public class BrkSetServiceImpl implements IBrkSetService
                             category.setMeshes(null);
                         }
                     }
+                    set.setLdrData(generateSetLdrContent(set.getSetId(), true, true, true, false));
                 }
             }
         }
