@@ -19,6 +19,7 @@ import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.bricks.mapper.BrkResourceMapper;
 import com.ruoyi.bricks.mapper.BrkFaceMapper;
 import com.ruoyi.bricks.mapper.BrkBricksMapper;
+import com.ruoyi.bricks.mapper.BrkBricksGroupMapper;
 import com.ruoyi.bricks.mapper.BrkSetMapper;
 import com.ruoyi.bricks.domain.BrkResource;
 import com.ruoyi.bricks.domain.BrkFace;
@@ -26,6 +27,7 @@ import com.ruoyi.bricks.domain.BrkFaceLayer;
 import com.ruoyi.bricks.domain.BrkBricks;
 import com.ruoyi.bricks.domain.BrkBricksBrick;
 import com.ruoyi.bricks.domain.BrkBricksConnpoint;
+import com.ruoyi.bricks.domain.BrkBricksGroup;
 import com.ruoyi.bricks.domain.BrkBricksMesh;
 import com.ruoyi.bricks.domain.BrkSet;
 import com.ruoyi.bricks.domain.BrkSetCategory;
@@ -66,6 +68,9 @@ public class BrkResourceServiceImpl implements IBrkResourceService
 
     @Autowired
     private BrkBricksMapper brkBricksMapper;
+
+    @Autowired
+    private BrkBricksGroupMapper brkBricksGroupMapper;
 
     @Autowired
     private BrkSetMapper brkSetMapper;
@@ -838,6 +843,48 @@ public class BrkResourceServiceImpl implements IBrkResourceService
                     }
                 }
 
+                List<BrkBricksGroup> groupList = new ArrayList<>();
+                if (modelData != null && modelData.getInstance() != null)
+                {
+                    Map<String, JSONArray> groupMap = modelData.getInstance().getGroup();
+                    if (groupMap != null && !groupMap.isEmpty())
+                    {
+                        for (Map.Entry<String, JSONArray> groupEntry : groupMap.entrySet())
+                        {
+                            JSONArray groupData = groupEntry.getValue();
+                            if (groupData != null && groupData.size() >= 3)
+                            {
+                                BrkBricksGroup group = new BrkBricksGroup();
+                                group.setGroupIndex(Integer.parseInt(groupEntry.getKey()));
+                                group.setGroupName(String.valueOf(groupData.get(0)));
+
+                                Object transformObj = groupData.get(1);
+                                if (transformObj instanceof JSONArray)
+                                {
+                                    JSONArray transform = (JSONArray) transformObj;
+                                    if (transform.size() >= 12)
+                                    {
+                                        group.setX(parseBigDecimal(transform.get(0)));
+                                        group.setY(parseBigDecimal(transform.get(1)));
+                                        group.setZ(parseBigDecimal(transform.get(2)));
+                                        group.setM11(parseBigDecimal(transform.get(3)));
+                                        group.setM12(parseBigDecimal(transform.get(4)));
+                                        group.setM13(parseBigDecimal(transform.get(5)));
+                                        group.setM21(parseBigDecimal(transform.get(6)));
+                                        group.setM22(parseBigDecimal(transform.get(7)));
+                                        group.setM23(parseBigDecimal(transform.get(8)));
+                                        group.setM31(parseBigDecimal(transform.get(9)));
+                                        group.setM32(parseBigDecimal(transform.get(10)));
+                                        group.setM33(parseBigDecimal(transform.get(11)));
+                                    }
+                                }
+                                groupList.add(group);
+                            }
+                        }
+                    }
+                }
+
+                brkBricks.setGroups(groupList);
                 brkBricksService.insertBrkBricks(brkBricks);
 
                 if (!meshList.isEmpty())
@@ -1032,6 +1079,24 @@ public class BrkResourceServiceImpl implements IBrkResourceService
                                     Map<String, Object> brickMap = (Map<String, Object>) brickObj;
                                     category.setBrickData(brickMap);
                                 }
+
+                                Object connpointObj = instanceMap.get("connpoint");
+                                if (connpointObj instanceof Map)
+                                {
+                                    @SuppressWarnings("unchecked")
+                                    Map<String, Object> connpointMap = (Map<String, Object>) connpointObj;
+                                    List<BrkBricksConnpoint> connpointList = parseSetConnpoints(connpointMap);
+                                    category.setConnpoints(connpointList);
+                                }
+
+                                Object groupObj = instanceMap.get("group");
+                                if (groupObj instanceof Map)
+                                {
+                                    @SuppressWarnings("unchecked")
+                                    Map<String, Object> groupMap = (Map<String, Object>) groupObj;
+                                    List<BrkBricksGroup> groupList = parseSetGroups(groupMap);
+                                    category.setGroups(groupList);
+                                }
                             }
                         }
 
@@ -1060,6 +1125,16 @@ public class BrkResourceServiceImpl implements IBrkResourceService
                                     mesh.setCreateTime(brkSet.getCreateTime());
                                 }
                                 brkSetMapper.batchBrkSetMesh(originalCategory.getMeshes());
+                            }
+
+                            if (originalCategory.getGroups() != null && !originalCategory.getGroups().isEmpty())
+                            {
+                                for (BrkBricksGroup group : originalCategory.getGroups())
+                                {
+                                    group.setBricksId(savedCategory.getCategoryId());
+                                    group.setCreateTime(brkSet.getCreateTime());
+                                }
+                                brkBricksGroupMapper.batchBrkBricksGroup(originalCategory.getGroups());
                             }
                         }
                     }
@@ -1189,9 +1264,10 @@ public class BrkResourceServiceImpl implements IBrkResourceService
             }
 
             brkBricks.setBricks(brickList);
+            brkBricks.setConnpoints(category.getConnpoints());
             brkBricksService.insertBrkBricks(brkBricks);
 
-            log.info("Inserted bricks for category: {} with {} bricks", bricksName, brickList.size());
+            log.info("Inserted bricks for category: {} with {} bricks, {} connpoints", bricksName, brickList.size(), category.getConnpoints() != null ? category.getConnpoints().size() : 0);
         }
         catch (Exception e)
         {
@@ -1292,6 +1368,132 @@ public class BrkResourceServiceImpl implements IBrkResourceService
         }
 
         return meshList;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<BrkBricksConnpoint> parseSetConnpoints(Map<String, Object> connpointMap)
+    {
+        List<BrkBricksConnpoint> connpointList = new ArrayList<>();
+
+        if (connpointMap == null || connpointMap.isEmpty())
+        {
+            return connpointList;
+        }
+
+        for (Map.Entry<String, Object> entry : connpointMap.entrySet())
+        {
+            try
+            {
+                Object connValue = entry.getValue();
+                if (!(connValue instanceof List))
+                {
+                    continue;
+                }
+
+                List<?> connData = (List<?>) connValue;
+                if (connData.size() < 5)
+                {
+                    continue;
+                }
+
+                BrkBricksConnpoint connpoint = new BrkBricksConnpoint();
+                connpoint.setConnIndex(Integer.parseInt(entry.getKey()));
+                connpoint.setConnType(String.valueOf(connData.get(0)));
+                connpoint.setStudType(String.valueOf(connData.get(1)));
+
+                Object posObj = connData.get(2);
+                Object normalObj = connData.get(3);
+
+                if (posObj instanceof List)
+                {
+                    List<?> pos = (List<?>) posObj;
+                    if (pos.size() >= 3)
+                    {
+                        connpoint.setX(parseBigDecimal(pos.get(0)));
+                        connpoint.setY(parseBigDecimal(pos.get(1)));
+                        connpoint.setZ(parseBigDecimal(pos.get(2)));
+                    }
+                }
+                if (normalObj instanceof List)
+                {
+                    List<?> normal = (List<?>) normalObj;
+                    if (normal.size() >= 3)
+                    {
+                        connpoint.setNx(parseBigDecimal(normal.get(0)));
+                        connpoint.setNy(parseBigDecimal(normal.get(1)));
+                        connpoint.setNz(parseBigDecimal(normal.get(2)));
+                    }
+                }
+                connpointList.add(connpoint);
+            }
+            catch (Exception e)
+            {
+                log.warn("Failed to parse connpoint: {}", entry.getKey(), e);
+            }
+        }
+
+        return connpointList;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<BrkBricksGroup> parseSetGroups(Map<String, Object> groupMap)
+    {
+        List<BrkBricksGroup> groupList = new ArrayList<>();
+
+        if (groupMap == null || groupMap.isEmpty())
+        {
+            return groupList;
+        }
+
+        for (Map.Entry<String, Object> entry : groupMap.entrySet())
+        {
+            try
+            {
+                Object groupValue = entry.getValue();
+                if (!(groupValue instanceof List))
+                {
+                    continue;
+                }
+
+                List<?> groupData = (List<?>) groupValue;
+                if (groupData.size() < 3)
+                {
+                    continue;
+                }
+
+                BrkBricksGroup group = new BrkBricksGroup();
+                group.setGroupIndex(Integer.parseInt(entry.getKey()));
+                group.setGroupName(String.valueOf(groupData.get(0)));
+
+                Object transformObj = groupData.get(1);
+                if (transformObj instanceof List)
+                {
+                    List<?> transform = (List<?>) transformObj;
+                    if (transform.size() >= 12)
+                    {
+                        group.setX(parseBigDecimal(transform.get(0)));
+                        group.setY(parseBigDecimal(transform.get(1)));
+                        group.setZ(parseBigDecimal(transform.get(2)));
+                        group.setM11(parseBigDecimal(transform.get(3)));
+                        group.setM12(parseBigDecimal(transform.get(4)));
+                        group.setM13(parseBigDecimal(transform.get(5)));
+                        group.setM21(parseBigDecimal(transform.get(6)));
+                        group.setM22(parseBigDecimal(transform.get(7)));
+                        group.setM23(parseBigDecimal(transform.get(8)));
+                        group.setM31(parseBigDecimal(transform.get(9)));
+                        group.setM32(parseBigDecimal(transform.get(10)));
+                        group.setM33(parseBigDecimal(transform.get(11)));
+                    }
+                }
+                groupList.add(group);
+            }
+            catch (Exception e)
+            {
+                log.warn("Failed to parse group: {}", entry.getKey(), e);
+            }
+        }
+
+        return groupList;
     }
 
     /**

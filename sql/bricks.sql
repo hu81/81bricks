@@ -211,3 +211,35 @@ create table brk_bricks_mesh (
   primary key (mesh_id),
   key idx_bricks_id (bricks_id)
 ) engine=innodb auto_increment=1 comment = '积木模型网格表';
+
+
+-- ----------------------------
+-- Table structure for brk_bricks_group (积木模型分组表)
+-- ----------------------------
+drop table if exists brk_bricks_group;
+create table brk_bricks_group (
+  group_id            bigint(20)      not null auto_increment    comment '分组ID',
+  bricks_id           bigint(20)      not null                   comment '积木模型ID',
+  group_index         int             not null                   comment '分组索引',
+  group_name          varchar(50)     not null                   comment '分组名称',
+  ref_id              varchar(500)                               comment '引用ID',
+  x                   decimal(10,4)   not null                   comment 'X坐标',
+  y                   decimal(10,4)   not null                   comment 'Y坐标',
+  z                   decimal(10,4)   not null                   comment 'Z坐标',
+  m11                 decimal(10,6)  default 1                  comment '变换矩阵M11',
+  m12                 decimal(10,6)  default 0                  comment '变换矩阵M12',
+  m13                 decimal(10,6)  default 0                  comment '变换矩阵M13',
+  m14                 decimal(10,6)  default 0                  comment '变换矩阵M14',
+  m21                 decimal(10,6)  default 0                  comment '变换矩阵M21',
+  m22                 decimal(10,6)  default 1                  comment '变换矩阵M22',
+  m23                 decimal(10,6)  default 0                  comment '变换矩阵M23',
+  m24                 decimal(10,6)  default 0                  comment '变换矩阵M24',
+  m31                 decimal(10,6)  default 0                  comment '变换矩阵M31',
+  m32                 decimal(10,6)  default 0                  comment '变换矩阵M32',
+  m33                 decimal(10,6)  default 1                  comment '变换矩阵M33',
+  m34                 decimal(10,6)  default 0                  comment '变换矩阵M34',
+  create_by          varchar(64)     default ''                 comment '创建者',
+  create_time        datetime                                   comment '创建时间',
+  primary key (group_id),
+  key idx_bricks_id (bricks_id)
+) engine=innodb auto_increment=1 comment = '积木模型分组表';

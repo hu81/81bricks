@@ -21,6 +21,10 @@ public interface IBrkSetService
 
     public List<BrkSet> selectBrkSetList(BrkSet brkSet);
 
+    public List<BrkSet> selectBrkSetListWithCategories(BrkSet brkSet);
+
+    public List<BrkSet> selectBrkSetListWithSimpleCategories(BrkSet brkSet);
+
     public int insertBrkSet(BrkSet brkSet);
 
     public int updateBrkSet(BrkSet brkSet);
@@ -32,4 +36,8 @@ public interface IBrkSetService
     public List<BrkSetCategory> selectBrkSetCategoryList(Long setId);
 
     public List<BrkSetMesh> selectBrkSetMeshList(Long categoryId);
+
+    public List<String> generateSetLdrContent(Long setId, boolean replaceDefaultColor, boolean useOriginalParts, boolean removeAbnormalParts);
+
+    public List<String> generateSetLdrContent(Long setId, boolean replaceDefaultColor, boolean useOriginalParts, boolean removeAbnormalParts, boolean includeHandheld);
 }

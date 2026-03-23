@@ -12,8 +12,10 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 import com.ruoyi.bricks.domain.BrkBricksBrick;
 import com.ruoyi.bricks.domain.BrkBricksConnpoint;
+import com.ruoyi.bricks.domain.BrkBricksGroup;
 import com.ruoyi.bricks.domain.BrkBricksMesh;
 import com.ruoyi.bricks.mapper.BrkBricksMapper;
+import com.ruoyi.bricks.mapper.BrkBricksGroupMapper;
 import com.ruoyi.bricks.mapper.BrkSetMapper;
 import com.ruoyi.bricks.domain.BrkSetMesh;
 import com.ruoyi.bricks.domain.BrkBricks;
@@ -39,6 +41,9 @@ public class BrkBricksServiceImpl implements IBrkBricksService
 
     @Autowired
     private BrkBricksMapper brkBricksMapper;
+
+    @Autowired
+    private BrkBricksGroupMapper brkBricksGroupMapper;
 
     @Autowired
     private BrkSetMapper brkSetMapper;
@@ -122,6 +127,16 @@ public class BrkBricksServiceImpl implements IBrkBricksService
             }
             brkBricksMapper.batchBrkBricksConnpoint(brkBricks.getConnpoints());
         }
+
+        if (brkBricks.getGroups() != null && !brkBricks.getGroups().isEmpty())
+        {
+            for (BrkBricksGroup group : brkBricks.getGroups())
+            {
+                group.setBricksId(brkBricks.getBricksId());
+                group.setCreateTime(brkBricks.getCreateTime());
+            }
+            brkBricksGroupMapper.batchBrkBricksGroup(brkBricks.getGroups());
+        }
         
         return rows;
     }
@@ -176,17 +191,24 @@ public class BrkBricksServiceImpl implements IBrkBricksService
     @Override
     public List<String> generateLdrContent(Long bricksId)
     {
-        return generateLdrContent(bricksId, false, false, false);
+        return generateLdrContent(bricksId, false, false, false, null, null, null);
     }
 
     @Override
     public List<String> generateLdrContent(Long bricksId, boolean replaceDefaultColor, boolean useOriginalParts)
     {
-        return generateLdrContent(bricksId, replaceDefaultColor, useOriginalParts, false);
+        return generateLdrContent(bricksId, replaceDefaultColor, useOriginalParts, false, null, null, null);
     }
 
     @Override
     public List<String> generateLdrContent(Long bricksId, boolean replaceDefaultColor, boolean useOriginalParts, boolean removeAbnormalParts)
+    {
+        return generateLdrContent(bricksId, replaceDefaultColor, useOriginalParts, removeAbnormalParts, null, null, null);
+    }
+
+    @Override
+    public List<String> generateLdrContent(Long bricksId, boolean replaceDefaultColor, boolean useOriginalParts, boolean removeAbnormalParts,
+            Double offsetX, Double offsetY, Double offsetZ)
     {
         List<String> lines = new ArrayList<>();
         BrkBricks bricks = selectBrkBricksByBricksId(bricksId);
@@ -194,6 +216,10 @@ public class BrkBricksServiceImpl implements IBrkBricksService
         {
             return lines;
         }
+
+        if (offsetX == null) offsetX = 0.0;
+        if (offsetY == null) offsetY = 0.0;
+        if (offsetZ == null) offsetZ = 0.0;
 
         Map<String, String> meshRefMap = new HashMap<>();
         if (useOriginalParts)
@@ -214,9 +240,14 @@ public class BrkBricksServiceImpl implements IBrkBricksService
             defaultColor = bricks.getDefaultColor();
         }
 
-        lines.add("0 Name: " + bricks.getBricksName());
-        lines.add("0 Comment: Generated from brk_bricks");
-        
+        if (offsetX == 0.0 && offsetY == 0.0 && offsetZ == 0.0)
+        {
+            lines.add("0 Name: " + bricks.getBricksName());
+            lines.add("0 Comment: Generated from brk_bricks");
+        } else {
+            lines.add("");
+        }
+
         for (BrkBricksBrick brick : bricks.getBricks())
         {
             BrkBricksBrick processedBrick = new BrkBricksBrick();
@@ -228,7 +259,7 @@ public class BrkBricksServiceImpl implements IBrkBricksService
                 if (DEFAULT_COLOR_MAP.containsKey(colorId))
                 {
                     Integer replaceColor = DEFAULT_COLOR_MAP.get(colorId);
-                    
+
                     if ("1009000".equals(colorId))
                     {
                         replaceColor = DEFAULT_COLOR_MAP.get("1009000");
@@ -289,9 +320,27 @@ public class BrkBricksServiceImpl implements IBrkBricksService
                 }
             }
 
-            lines.add(processedBrick.toLdrLine());
+            double x = (brick.getX() != null ? brick.getX().doubleValue() : 0.0) + offsetX;
+            double y = (brick.getY() != null ? brick.getY().doubleValue() : 0.0) + offsetY;
+            double z = (brick.getZ() != null ? brick.getZ().doubleValue() : 0.0) + offsetZ;
+
+            String ldrLine = String.format("1 %s %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %s.dat",
+                    processedBrick.getColorId() != null ? processedBrick.getColorId() : "0",
+                    x, y, z,
+                    processedBrick.getM11() != null ? processedBrick.getM11().doubleValue() : 1.0,
+                    processedBrick.getM12() != null ? processedBrick.getM12().doubleValue() : 0.0,
+                    processedBrick.getM13() != null ? processedBrick.getM13().doubleValue() : 0.0,
+                    processedBrick.getM21() != null ? processedBrick.getM21().doubleValue() : 0.0,
+                    processedBrick.getM22() != null ? processedBrick.getM22().doubleValue() : 1.0,
+                    processedBrick.getM23() != null ? processedBrick.getM23().doubleValue() : 0.0,
+                    processedBrick.getM31() != null ? processedBrick.getM31().doubleValue() : 0.0,
+                    processedBrick.getM32() != null ? processedBrick.getM32().doubleValue() : 0.0,
+                    processedBrick.getM33() != null ? processedBrick.getM33().doubleValue() : 1.0,
+                    processedBrick.getPartNumber() != null ? processedBrick.getPartNumber() : "");
+
+            lines.add(ldrLine);
         }
-        
+
         return lines;
     }
 }

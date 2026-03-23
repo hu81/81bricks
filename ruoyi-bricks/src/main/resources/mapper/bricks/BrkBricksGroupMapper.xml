@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.bricks.mapper.BrkBricksGroupMapper">
+
+    <resultMap type="com.ruoyi.bricks.domain.BrkBricksGroup" id="BrkBricksGroupResult">
+        <result property="groupId"    column="group_id"    />
+        <result property="bricksId"    column="bricks_id"    />
+        <result property="groupIndex"    column="group_index"    />
+        <result property="groupName"    column="group_name"    />
+        <result property="refId"    column="ref_id"    />
+        <result property="x"    column="x"    />
+        <result property="y"    column="y"    />
+        <result property="z"    column="z"    />
+        <result property="m11"    column="m11"    />
+        <result property="m12"    column="m12"    />
+        <result property="m13"    column="m13"    />
+        <result property="m14"    column="m14"    />
+        <result property="m21"    column="m21"    />
+        <result property="m22"    column="m22"    />
+        <result property="m23"    column="m23"    />
+        <result property="m24"    column="m24"    />
+        <result property="m31"    column="m31"    />
+        <result property="m32"    column="m32"    />
+        <result property="m33"    column="m33"    />
+        <result property="m34"    column="m34"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <select id="selectBrkBricksGroupList" parameterType="Long" resultMap="BrkBricksGroupResult">
+        select group_id, bricks_id, group_index, group_name, ref_id,
+               x, y, z, m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, create_by, create_time
+        from brk_bricks_group
+        where bricks_id = #{bricksId}
+        order by group_index
+    </select>
+
+    <insert id="batchBrkBricksGroup" parameterType="java.util.List">
+        insert into brk_bricks_group (bricks_id, group_index, group_name, ref_id,
+                                      x, y, z, m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, create_time)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.bricksId}, #{item.groupIndex}, #{item.groupName}, #{item.refId},
+             #{item.x}, #{item.y}, #{item.z}, #{item.m11}, #{item.m12}, #{item.m13}, #{item.m14},
+             #{item.m21}, #{item.m22}, #{item.m23}, #{item.m24}, #{item.m31}, #{item.m32}, #{item.m33}, #{item.m34}, #{item.createTime})
+        </foreach>
+    </insert>
+
+    <delete id="deleteBrkBricksGroupByBricksId" parameterType="Long">
+        delete from brk_bricks_group where bricks_id = #{bricksId}
+    </delete>
+
+</mapper>

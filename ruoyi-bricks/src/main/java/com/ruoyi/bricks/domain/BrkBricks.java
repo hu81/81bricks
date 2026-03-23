@@ -65,6 +65,9 @@ public class BrkBricks extends BaseEntity
     /** 连接点列表 */
     private List<BrkBricksConnpoint> connpoints;
 
+    /** 分组列表 */
+    private List<BrkBricksGroup> groups;
+
     /** LDR数据 */
     private List<String> ldrData;
 
@@ -196,6 +199,16 @@ public class BrkBricks extends BaseEntity
     public void setConnpoints(List<BrkBricksConnpoint> connpoints)
     {
         this.connpoints = connpoints;
+    }
+
+    public List<BrkBricksGroup> getGroups()
+    {
+        return groups;
+    }
+
+    public void setGroups(List<BrkBricksGroup> groups)
+    {
+        this.groups = groups;
     }
 
     public List<String> getLdrData()

@@ -41,6 +41,12 @@ public class BrkSetCategory extends BaseEntity
     /** 积木数据(临时存储，用于解析) */
     private java.util.Map<String, Object> brickData;
 
+    /** 连接点列表(临时存储，用于解析) */
+    private List<BrkBricksConnpoint> connpoints;
+
+    /** 分组列表(临时存储，用于解析) */
+    private List<BrkBricksGroup> groups;
+
     public void setCategoryId(Long categoryId) 
     {
         this.categoryId = categoryId;
@@ -109,6 +115,26 @@ public class BrkSetCategory extends BaseEntity
     public void setBrickData(java.util.Map<String, Object> brickData)
     {
         this.brickData = brickData;
+    }
+
+    public List<BrkBricksConnpoint> getConnpoints()
+    {
+        return connpoints;
+    }
+
+    public void setConnpoints(List<BrkBricksConnpoint> connpoints)
+    {
+        this.connpoints = connpoints;
+    }
+
+    public List<BrkBricksGroup> getGroups()
+    {
+        return groups;
+    }
+
+    public void setGroups(List<BrkBricksGroup> groups)
+    {
+        this.groups = groups;
     }
 
     @Override

@@ -1,14 +1,20 @@
 package com.ruoyi.bricks.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import com.ruoyi.common.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ruoyi.bricks.domain.BrkSet;
 import com.ruoyi.bricks.domain.BrkSetCategory;
 import com.ruoyi.bricks.domain.BrkSetMesh;
+import com.ruoyi.bricks.domain.BrkBricks;
+import com.ruoyi.bricks.domain.BrkBricksConnpoint;
 import com.ruoyi.bricks.mapper.BrkSetMapper;
 import com.ruoyi.bricks.service.IBrkSetService;
+import com.ruoyi.bricks.service.IBrkBricksService;
 
 /**
  * 套装Service业务层处理
@@ -21,6 +27,9 @@ public class BrkSetServiceImpl implements IBrkSetService
 {
     @Autowired
     private BrkSetMapper brkSetMapper;
+
+    @Autowired
+    private IBrkBricksService brkBricksService;
 
     @Override
     public BrkSet selectBrkSetBySetId(Long setId)
@@ -54,6 +63,47 @@ public class BrkSetServiceImpl implements IBrkSetService
     public List<BrkSet> selectBrkSetList(BrkSet brkSet)
     {
         return brkSetMapper.selectBrkSetList(brkSet);
+    }
+
+    @Override
+    public List<BrkSet> selectBrkSetListWithCategories(BrkSet brkSet)
+    {
+        List<BrkSet> list = brkSetMapper.selectBrkSetList(brkSet);
+        if (list != null && !list.isEmpty())
+        {
+            for (BrkSet set : list)
+            {
+                if (set.getSetId() != null)
+                {
+                    set.setCategories(brkSetMapper.selectBrkSetCategoryList(set.getSetId()));
+                }
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public List<BrkSet> selectBrkSetListWithSimpleCategories(BrkSet brkSet)
+    {
+        List<BrkSet> list = brkSetMapper.selectBrkSetList(brkSet);
+        if (list != null && !list.isEmpty())
+        {
+            for (BrkSet set : list)
+            {
+                if (set.getSetId() != null)
+                {
+                    set.setCategories(brkSetMapper.selectBrkSetCategoryList(set.getSetId()));
+                    if (set.getCategories() != null)
+                    {
+                        for (BrkSetCategory category : set.getCategories())
+                        {
+                            category.setMeshes(null);
+                        }
+                    }
+                }
+            }
+        }
+        return list;
     }
 
     @Override
@@ -120,5 +170,196 @@ public class BrkSetServiceImpl implements IBrkSetService
     public List<BrkSetMesh> selectBrkSetMeshList(Long categoryId)
     {
         return brkSetMapper.selectBrkSetMeshList(categoryId);
+    }
+
+    @Override
+    public List<String> generateSetLdrContent(Long setId, boolean replaceDefaultColor, boolean useOriginalParts, boolean removeAbnormalParts)
+    {
+        return generateSetLdrContent(setId, replaceDefaultColor, useOriginalParts, removeAbnormalParts, false);
+    }
+
+    @Override
+    public List<String> generateSetLdrContent(Long setId, boolean replaceDefaultColor, boolean useOriginalParts, boolean removeAbnormalParts, boolean includeHandheld)
+    {
+        List<String> mergedLines = new ArrayList<>();
+
+        List<BrkSetCategory> categories = brkSetMapper.selectBrkSetCategoryList(setId);
+        if (categories == null || categories.isEmpty())
+        {
+            return mergedLines;
+        }
+
+        Map<String, List<BrkBricks>> categoryModels = new HashMap<>();
+        for (BrkSetCategory category : categories)
+        {
+            BrkBricks bricks = brkBricksService.selectBrkBricksByUuid(category.getUuid());
+            if (bricks != null)
+            {
+                String modelCategory = bricks.getCategory();
+                if (shouldIncludeCategory(modelCategory, includeHandheld))
+                {
+                    categoryModels.computeIfAbsent(modelCategory, k -> new ArrayList<>()).add(bricks);
+                }
+            }
+        }
+
+        if (categoryModels.isEmpty())
+        {
+            return mergedLines;
+        }
+
+        mergedLines.add("0 Name: Set-" + setId);
+        mergedLines.add("0 Comment: Merged from set " + setId + (includeHandheld ? " (Handheld)" : ""));
+
+        Map<String, BrkBricks> processedModels = new HashMap<>();
+        BrkBricks rootModel = findRootModel(categoryModels, includeHandheld);
+        if (rootModel == null)
+        {
+            rootModel = categoryModels.values().iterator().next().get(0);
+        }
+
+        mergedLines.addAll(brkBricksService.generateLdrContent(rootModel.getBricksId(), replaceDefaultColor, useOriginalParts, removeAbnormalParts));
+        processedModels.put(rootModel.getCategory(), rootModel);
+
+        List<String[]> connectionOrder = getConnectionOrder(includeHandheld);
+
+        for (String[] connection : connectionOrder)
+        {
+            String fromCategory = connection[0];
+            String toCategory = connection[1];
+
+            if (!processedModels.containsKey(fromCategory) || !categoryModels.containsKey(toCategory) || processedModels.containsKey(toCategory))
+            {
+                continue;
+            }
+
+            BrkBricks parentModel = processedModels.get(fromCategory);
+            List<BrkBricks> childModels = categoryModels.get(toCategory);
+
+            if (childModels != null && !childModels.isEmpty())
+            {
+                for (BrkBricks childModel : childModels)
+                {
+                    if (processedModels.containsKey(childModel.getCategory()))
+                    {
+                        continue;
+                    }
+
+                    BrkBricksConnpoint tubeConn = findConnPointByType(parentModel, "tube");
+                    BrkBricksConnpoint studConn = findConnPointByType(childModel, "stud");
+
+                    double offsetX = 0, offsetY = 0, offsetZ = 0;
+                    if (tubeConn != null && studConn != null)
+                    {
+                        offsetX = tubeConn.getX().doubleValue() - studConn.getX().doubleValue();
+                        offsetY = tubeConn.getY().doubleValue() - studConn.getY().doubleValue();
+                        offsetZ = tubeConn.getZ().doubleValue() - studConn.getZ().doubleValue();
+                    }
+
+                    mergedLines.addAll(brkBricksService.generateLdrContent(childModel.getBricksId(), replaceDefaultColor, useOriginalParts, removeAbnormalParts, offsetX, offsetY, offsetZ));
+                    processedModels.put(childModel.getCategory(), childModel);
+                }
+            }
+        }
+
+        return mergedLines;
+    }
+
+    private boolean shouldIncludeCategory(String category, boolean includeHandheld)
+    {
+        if (includeHandheld)
+        {
+            return !"tops".equalsIgnoreCase(category);
+        }
+        else
+        {
+            return !"tops_handheld".equalsIgnoreCase(category) && !"handheld".equalsIgnoreCase(category);
+        }
+    }
+
+    private List<String[]> getConnectionOrder(boolean includeHandheld)
+    {
+        List<String[]> connectionOrder = new ArrayList<>();
+        if (includeHandheld)
+        {
+            connectionOrder.add(new String[]{"hair", "tops_handheld"});
+            connectionOrder.add(new String[]{"hairAccessory", "tops_handheld"});
+            connectionOrder.add(new String[]{"tops_handheld", "bottoms"});
+            connectionOrder.add(new String[]{"tops_handheld", "legs"});
+            connectionOrder.add(new String[]{"bottoms", "shoes"});
+            connectionOrder.add(new String[]{"legs", "shoes"});
+            connectionOrder.add(new String[]{"shoes", "base"});
+            connectionOrder.add(new String[]{"handheld", "tops_handheld"});
+        }
+        else
+        {
+            connectionOrder.add(new String[]{"hair", "tops"});
+            connectionOrder.add(new String[]{"hair", "topsCustom"});
+            connectionOrder.add(new String[]{"hairAccessory", "tops"});
+            connectionOrder.add(new String[]{"hairAccessory", "topsCustom"});
+            connectionOrder.add(new String[]{"tops", "bottoms"});
+            connectionOrder.add(new String[]{"topsCustom", "bottoms"});
+            connectionOrder.add(new String[]{"tops", "legs"});
+            connectionOrder.add(new String[]{"topsCustom", "legs"});
+            connectionOrder.add(new String[]{"bottoms", "shoes"});
+            connectionOrder.add(new String[]{"legs", "shoes"});
+            connectionOrder.add(new String[]{"shoes", "base"});
+        }
+        return connectionOrder;
+    }
+
+    private BrkBricks findRootModel(Map<String, List<BrkBricks>> categoryModels, boolean includeHandheld)
+    {
+        if (includeHandheld)
+        {
+            if (categoryModels.containsKey("tops_handheld"))
+            {
+                return categoryModels.get("tops_handheld").get(0);
+            }
+        }
+        else
+        {
+            if (categoryModels.containsKey("tops"))
+            {
+                return categoryModels.get("tops").get(0);
+            }
+            if (categoryModels.containsKey("topsCustom"))
+            {
+                return categoryModels.get("topsCustom").get(0);
+            }
+        }
+        if (categoryModels.containsKey("hair"))
+        {
+            return categoryModels.get("hair").get(0);
+        }
+        if (categoryModels.containsKey("base"))
+        {
+            return categoryModels.get("base").get(0);
+        }
+        if (categoryModels.containsKey("bottoms"))
+        {
+            return categoryModels.get("bottoms").get(0);
+        }
+        if (categoryModels.containsKey("legs"))
+        {
+            return categoryModels.get("legs").get(0);
+        }
+        return null;
+    }
+
+    private BrkBricksConnpoint findConnPointByType(BrkBricks model, String type)
+    {
+        if (model.getConnpoints() == null)
+        {
+            return null;
+        }
+        for (BrkBricksConnpoint conn : model.getConnpoints())
+        {
+            if (type.equalsIgnoreCase(conn.getStudType()))
+            {
+                return conn;
+            }
+        }
+        return null;
     }
 }
