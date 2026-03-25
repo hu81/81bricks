@@ -12,6 +12,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="originId"    column="origin_id"    />
         <result property="originUrl"    column="origin_url"    />
         <result property="comments"    column="comments"    />
+        <result property="previewImg"    column="preview_img"    />
         <result property="createBy"    column="create_by"    />
         <result property="createTime"    column="create_time"    />
         <result property="updateBy"    column="update_by"    />
@@ -48,7 +49,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectBrkSetVo">
-        select set_id, set_name, uuid, asset_type, origin_id, origin_url, comments, create_by, create_time, update_by, update_time from brk_set
+        select set_id, set_name, uuid, asset_type, origin_id, origin_url, comments, preview_img, create_by, create_time, update_by, update_time from brk_set
     </sql>
 
     <select id="selectBrkSetList" parameterType="BrkSet" resultMap="BrkSetResult">
@@ -109,6 +110,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="originId != null">origin_id,</if>
             <if test="originUrl != null">origin_url,</if>
             <if test="comments != null">comments,</if>
+            <if test="previewImg != null">preview_img,</if>
             <if test="createBy != null">create_by,</if>
             <if test="createTime != null">create_time,</if>
             <if test="updateBy != null">update_by,</if>
@@ -121,6 +123,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="originId != null">#{originId},</if>
             <if test="originUrl != null">#{originUrl},</if>
             <if test="comments != null">#{comments},</if>
+            <if test="previewImg != null">#{previewImg},</if>
             <if test="createBy != null">#{createBy},</if>
             <if test="createTime != null">#{createTime},</if>
             <if test="updateBy != null">#{updateBy},</if>
@@ -137,6 +140,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="originId != null">origin_id = #{originId},</if>
             <if test="originUrl != null">origin_url = #{originUrl},</if>
             <if test="comments != null">comments = #{comments},</if>
+            <if test="previewImg != null">preview_img = #{previewImg},</if>
             <if test="updateBy != null">update_by = #{updateBy},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
         </trim>

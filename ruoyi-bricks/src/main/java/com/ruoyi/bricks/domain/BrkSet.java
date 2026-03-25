@@ -48,6 +48,9 @@ public class BrkSet extends BaseEntity
     /** LDR数据 */
     private java.util.List<String> ldrData;
 
+    /** 预览图(base64) */
+    private String previewImg;
+
     public void setSetId(Long setId) 
     {
         this.setId = setId;
@@ -136,6 +139,16 @@ public class BrkSet extends BaseEntity
     public void setLdrData(java.util.List<String> ldrData)
     {
         this.ldrData = ldrData;
+    }
+
+    public String getPreviewImg()
+    {
+        return previewImg;
+    }
+
+    public void setPreviewImg(String previewImg)
+    {
+        this.previewImg = previewImg;
     }
 
     @Override

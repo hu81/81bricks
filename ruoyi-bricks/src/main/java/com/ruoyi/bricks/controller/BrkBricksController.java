@@ -17,6 +17,7 @@ import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.bricks.domain.BrkBricks;
+import com.ruoyi.bricks.domain.PreviewImgRequest;
 import com.ruoyi.bricks.service.IBrkBricksService;
 import com.ruoyi.common.core.page.TableDataInfo;
 
@@ -82,5 +83,13 @@ public class BrkBricksController extends BaseController
     {
         List<String> ldrContent = brkBricksService.generateLdrContent(bricksId, replaceDefaultColor, useOriginalParts, removeAbnormalParts);
         return AjaxResult.success("操作成功", ldrContent);
+    }
+
+    @PreAuthorize("@ss.hasPermi('bricks:edit')")
+    @Log(title = "积木模型预览图", businessType = BusinessType.UPDATE)
+    @PutMapping("/preview/{bricksId}")
+    public AjaxResult updatePreviewImg(@PathVariable("bricksId") Long bricksId, @RequestBody PreviewImgRequest request)
+    {
+        return toAjax(brkBricksService.updatePreviewImg(bricksId, request.getPreviewImg()));
     }
 }

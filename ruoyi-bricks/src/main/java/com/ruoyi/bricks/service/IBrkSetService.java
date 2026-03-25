@@ -40,4 +40,6 @@ public interface IBrkSetService
     public List<String> generateSetLdrContent(Long setId, boolean replaceDefaultColor, boolean useOriginalParts, boolean removeAbnormalParts);
 
     public List<String> generateSetLdrContent(Long setId, boolean replaceDefaultColor, boolean useOriginalParts, boolean removeAbnormalParts, boolean includeHandheld);
+
+    public int updatePreviewImg(Long setId, String previewImg);
 }

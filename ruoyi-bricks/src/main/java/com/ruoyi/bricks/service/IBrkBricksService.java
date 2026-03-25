@@ -43,4 +43,6 @@ public interface IBrkBricksService
 
     public List<String> generateLdrContent(Long bricksId, boolean replaceDefaultColor, boolean useOriginalParts, boolean removeAbnormalParts, 
             Double offsetX, Double offsetY, Double offsetZ, boolean translateByGroup);
+
+    public int updatePreviewImg(Long bricksId, String previewImg);
 }

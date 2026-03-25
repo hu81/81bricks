@@ -389,4 +389,14 @@ public class BrkBricksServiceImpl implements IBrkBricksService
 
         return lines;
     }
+
+    @Override
+    public int updatePreviewImg(Long bricksId, String previewImg)
+    {
+        BrkBricks brkBricks = new BrkBricks();
+        brkBricks.setBricksId(bricksId);
+        brkBricks.setPreviewImg(previewImg);
+        brkBricks.setUpdateTime(DateUtils.getNowDate());
+        return brkBricksMapper.updateBrkBricks(brkBricks);
+    }
 }

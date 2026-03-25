@@ -376,4 +376,14 @@ public class BrkSetServiceImpl implements IBrkSetService
         }
         return null;
     }
+
+    @Override
+    public int updatePreviewImg(Long setId, String previewImg)
+    {
+        BrkSet brkSet = new BrkSet();
+        brkSet.setSetId(setId);
+        brkSet.setPreviewImg(previewImg);
+        brkSet.setUpdateTime(DateUtils.getNowDate());
+        return brkSetMapper.updateBrkSet(brkSet);
+    }
 }

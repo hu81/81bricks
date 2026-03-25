@@ -71,6 +71,9 @@ public class BrkBricks extends BaseEntity
     /** LDR数据 */
     private List<String> ldrData;
 
+    /** 预览图(base64) */
+    private String previewImg;
+
     public void setBricksId(Long bricksId) 
     {
         this.bricksId = bricksId;
@@ -219,6 +222,16 @@ public class BrkBricks extends BaseEntity
     public void setLdrData(List<String> ldrData)
     {
         this.ldrData = ldrData;
+    }
+
+    public String getPreviewImg()
+    {
+        return previewImg;
+    }
+
+    public void setPreviewImg(String previewImg)
+    {
+        this.previewImg = previewImg;
     }
 
     @Override
