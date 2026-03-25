@@ -87,7 +87,7 @@ public class BrkBricksServiceImpl implements IBrkBricksService
     }
 
     @Override
-    public List<BrkBricks> selectBrkBricksListWithLdrData(BrkBricks brkBricks)
+    public List<BrkBricks> selectBrkBricksListWithLdrData(BrkBricks brkBricks, boolean includeLdr)
     {
         List<BrkBricks> list = brkBricksMapper.selectBrkBricksList(brkBricks);
         if (list != null && !list.isEmpty())
@@ -98,7 +98,10 @@ public class BrkBricksServiceImpl implements IBrkBricksService
                 {
                     bricks.setBricks(brkBricksMapper.selectBrkBricksBrickList(bricks.getBricksId()));
                     bricks.setConnpoints(brkBricksMapper.selectBrkBricksConnpointList(bricks.getBricksId()));
-                    bricks.setLdrData(generateLdrContent(bricks.getBricksId(), true, true, false));
+                    if (includeLdr)
+                    {
+                        bricks.setLdrData(generateLdrContent(bricks.getBricksId(), true, true, false));
+                    }
                 }
             }
         }

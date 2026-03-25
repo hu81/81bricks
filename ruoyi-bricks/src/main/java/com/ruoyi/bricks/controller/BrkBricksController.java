@@ -17,6 +17,7 @@ import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.bricks.domain.BrkBricks;
+import com.ruoyi.bricks.domain.BrkBricksListDTO;
 import com.ruoyi.bricks.domain.PreviewImgRequest;
 import com.ruoyi.bricks.service.IBrkBricksService;
 import com.ruoyi.common.core.page.TableDataInfo;
@@ -36,10 +37,10 @@ public class BrkBricksController extends BaseController
 
     @PreAuthorize("@ss.hasPermi('bricks:list')")
     @GetMapping("/list")
-    public TableDataInfo list(BrkBricks brkBricks)
+    public TableDataInfo list(BrkBricksListDTO dto)
     {
         startPage();
-        List<BrkBricks> list = brkBricksService.selectBrkBricksListWithLdrData(brkBricks);
+        List<BrkBricks> list = brkBricksService.selectBrkBricksListWithLdrData(dto, dto.isIncludeLdr());
         return getDataTable(list);
     }
 

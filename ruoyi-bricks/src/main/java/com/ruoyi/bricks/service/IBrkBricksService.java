@@ -19,7 +19,7 @@ public interface IBrkBricksService
 
     public List<BrkBricks> selectBrkBricksList(BrkBricks brkBricks);
 
-    public List<BrkBricks> selectBrkBricksListWithLdrData(BrkBricks brkBricks);
+    public List<BrkBricks> selectBrkBricksListWithLdrData(BrkBricks brkBricks, boolean includeLdr);
 
     public int insertBrkBricks(BrkBricks brkBricks);
 

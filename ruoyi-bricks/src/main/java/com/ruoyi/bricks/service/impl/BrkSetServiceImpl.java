@@ -83,7 +83,7 @@ public class BrkSetServiceImpl implements IBrkSetService
     }
 
     @Override
-    public List<BrkSet> selectBrkSetListWithSimpleCategories(BrkSet brkSet)
+    public List<BrkSet> selectBrkSetListWithSimpleCategories(BrkSet brkSet, boolean includeLdr)
     {
         List<BrkSet> list = brkSetMapper.selectBrkSetList(brkSet);
         if (list != null && !list.isEmpty())
@@ -100,7 +100,10 @@ public class BrkSetServiceImpl implements IBrkSetService
                             category.setMeshes(null);
                         }
                     }
-                    set.setLdrData(generateSetLdrContent(set.getSetId(), true, true, true, false));
+                    if (includeLdr)
+                    {
+                        set.setLdrData(generateSetLdrContent(set.getSetId(), true, true, true, false));
+                    }
                 }
             }
         }

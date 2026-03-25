@@ -15,6 +15,7 @@ import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.bricks.domain.BrkSet;
+import com.ruoyi.bricks.domain.BrkSetListDTO;
 import com.ruoyi.bricks.domain.PreviewImgRequest;
 import com.ruoyi.bricks.service.IBrkSetService;
 import com.ruoyi.common.core.page.TableDataInfo;
@@ -34,10 +35,10 @@ public class BrkSetController extends BaseController
 
     @PreAuthorize("@ss.hasPermi('bricks:set:list')")
     @GetMapping("/list")
-    public TableDataInfo list(BrkSet brkSet)
+    public TableDataInfo list(BrkSetListDTO dto)
     {
         startPage();
-        List<BrkSet> list = brkSetService.selectBrkSetListWithSimpleCategories(brkSet);
+        List<BrkSet> list = brkSetService.selectBrkSetListWithSimpleCategories(dto, dto.isIncludeLdr());
         return getDataTable(list);
     }
 

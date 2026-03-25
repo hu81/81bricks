@@ -23,7 +23,7 @@ public interface IBrkSetService
 
     public List<BrkSet> selectBrkSetListWithCategories(BrkSet brkSet);
 
-    public List<BrkSet> selectBrkSetListWithSimpleCategories(BrkSet brkSet);
+    public List<BrkSet> selectBrkSetListWithSimpleCategories(BrkSet brkSet, boolean includeLdr);
 
     public int insertBrkSet(BrkSet brkSet);
 
