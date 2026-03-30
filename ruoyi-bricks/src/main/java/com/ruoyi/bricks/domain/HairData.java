@@ -44,6 +44,10 @@ public class HairData
         /** 模型 */
         private Model model;
 
+        /** 手持形态模型 */
+        @JSONField(name = "model_handheld")
+        private Model modelHandheld;
+
         /** 默认颜色 */
         @JSONField(name = "default_color")
         private Integer defaultColor;
@@ -56,6 +60,16 @@ public class HairData
         public void setModel(Model model)
         {
             this.model = model;
+        }
+
+        public Model getModelHandheld()
+        {
+            return modelHandheld;
+        }
+
+        public void setModelHandheld(Model modelHandheld)
+        {
+            this.modelHandheld = modelHandheld;
         }
 
         public Integer getDefaultColor()

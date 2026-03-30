@@ -190,6 +190,7 @@ public class BrkResourceServiceImpl implements IBrkResourceService
             if (libraryInfo.getTabsV2() != null && libraryInfo.getTabsV2().getLabels() != null)
             {
 //                saveResourceImages(libraryInfo);
+//                parseModelResource(libraryInfo);
             }
 
             if (libraryInfo.getConfig() != null && libraryInfo.getConfig().getAssetInfo() != null)
@@ -318,6 +319,150 @@ public class BrkResourceServiceImpl implements IBrkResourceService
         catch (Exception e)
         {
             log.error("Failed to save eye images", e);
+        }
+    }
+
+    private void parseModelResource(LibraryInfo libraryInfo)
+    {
+        try
+        {
+            int insertCount = 0;
+            int skipCount = 0;
+            int errorCount = 0;
+
+            List<String> excludeLabels = java.util.Arrays.asList("表情", "背景");
+            List<String> excludeSubLabels = java.util.Arrays.asList("套装");
+
+            for (LibraryInfo.TabLabel label : libraryInfo.getTabsV2().getLabels())
+            {
+                String labelName = label.getName();
+                if (excludeLabels.contains(labelName))
+                {
+                    continue;
+                }
+
+                if (label.getLabels() == null || label.getLabels().isEmpty())
+                {
+                    continue;
+                }
+
+                for (LibraryInfo.TabLabel subLabel : label.getLabels())
+                {
+                    String subLabelName = subLabel.getName();
+                    if (excludeSubLabels.contains(subLabelName))
+                    {
+                        continue;
+                    }
+
+                    if ("服装".equals(labelName) && "毕业款".equals(subLabelName))
+                    {
+                        continue;
+                    }
+
+                    if (subLabel.getAssets() == null || subLabel.getAssets().isEmpty())
+                    {
+                        continue;
+                    }
+
+                    for (String assetUrl : subLabel.getAssets())
+                    {
+                        String originId = assetUrl.substring(assetUrl.lastIndexOf("/") + 1);
+
+                        BrkBricks existingBricks = brkBricksMapper.selectBrkBricksByOriginId(originId);
+                        if (existingBricks != null)
+                        {
+                            skipCount++;
+                            log.info("Skipping existing bricks model: {}", originId);
+                            continue;
+                        }
+
+                        log.info("Processing model resource: {} (label={}, sublabel={})", assetUrl, labelName, subLabelName);
+                        try
+                        {
+                            HairData hairData = downloadAndParseHairJson(assetUrl);
+                            if (hairData == null || hairData.getData() == null || hairData.getData().getModel() == null)
+                            {
+                                log.warn("Failed to download or parse model JSON: {}", assetUrl);
+                                errorCount++;
+                                continue;
+                            }
+
+                            HairData.Model model = hairData.getData().getModel();
+                            HairData.ModelData modelData = model.getData();
+                            HairData.Config config = modelData != null ? modelData.getConfig() : null;
+
+                            BrkBricks brkBricks = new BrkBricks();
+                            brkBricks.setBricksName(originId.replace(".json", ""));
+                            brkBricks.setUuid(model.getUuid());
+                            brkBricks.setAssetType(hairData.getType());
+                            brkBricks.setCategory(getCategoryFromAssetType(hairData.getType()));
+                            brkBricks.setLabel(labelName);
+                            brkBricks.setSublabel(subLabelName);
+                            if (config != null)
+                            {
+                                brkBricks.setDiyGroup(config.getDiyGroup());
+                                brkBricks.setRootGroup(config.getRoot());
+                            }
+                            brkBricks.setDefaultColor(hairData.getData().getDefaultColor());
+                            brkBricks.setOriginId(originId);
+                            brkBricks.setOriginUrl(assetUrl);
+                            brkBricks.setCreateTime(DateUtils.getNowDate());
+
+                            buildAndSetBricksDetails(brkBricks, modelData, originId);
+                            insertBrkBricksWithMeshes(brkBricks, modelData, originId);
+
+                            if (hairData.getData().getModelHandheld() != null)
+                            {
+                                HairData.Model handheldModel = hairData.getData().getModelHandheld();
+                                String handheldOriginId = originId + "_handheld";
+
+                                BrkBricks handheldBricks = new BrkBricks();
+                                handheldBricks.setBricksName(originId.replace(".json", "") + "_handheld");
+                                handheldBricks.setUuid(handheldModel.getUuid());
+                                handheldBricks.setAssetType(hairData.getType());
+                                handheldBricks.setCategory(getCategoryFromAssetType(hairData.getType()));
+                                handheldBricks.setLabel(labelName);
+                                handheldBricks.setSublabel(subLabelName);
+                                HairData.Config handheldConfig = handheldModel.getData() != null ? handheldModel.getData().getConfig() : null;
+                                if (handheldConfig != null)
+                                {
+                                    handheldBricks.setDiyGroup(handheldConfig.getDiyGroup());
+                                    handheldBricks.setRootGroup(handheldConfig.getRoot());
+                                }
+                                handheldBricks.setDefaultColor(hairData.getData().getDefaultColor());
+                                handheldBricks.setOriginId(handheldOriginId);
+                                handheldBricks.setOriginUrl(assetUrl);
+                                handheldBricks.setCreateTime(DateUtils.getNowDate());
+
+                                buildAndSetBricksDetails(handheldBricks, handheldModel.getData(), handheldOriginId);
+                                insertBrkBricksWithMeshes(handheldBricks, handheldModel.getData(), handheldOriginId);
+
+                                brkBricks.setHandheld(handheldModel.getUuid());
+                                brkBricksMapper.updateBrkBricks(brkBricks);
+
+                                log.info("Inserted handheld model for {} with bricks_id={}", originId, handheldBricks.getBricksId());
+                            }
+
+                            insertCount++;
+                            log.info("Inserted model resource: {} (label={}, sublabel={}) with {} bricks, {} connpoints, {} meshes",
+                                originId, labelName, subLabelName,
+                                brkBricks.getBricks().size(), brkBricks.getConnpoints().size(),
+                                brkBricks.getBricksId());
+                        }
+                        catch (Exception e)
+                        {
+                            errorCount++;
+                            log.error("Error processing model resource: {}", assetUrl, e);
+                        }
+                    }
+                }
+            }
+
+            log.info("Model resource processing completed - Insert: {}, Skip: {}, Error: {}", insertCount, skipCount, errorCount);
+        }
+        catch (Exception e)
+        {
+            log.error("Failed to parse model resources", e);
         }
     }
 
@@ -666,6 +811,83 @@ public class BrkResourceServiceImpl implements IBrkResourceService
         return response.toString();
     }
 
+    private List<BrkBricksBrick> parseBrickList(Map<String, JSONArray> brickMap)
+    {
+        List<BrkBricksBrick> brickList = new ArrayList<>();
+        if (brickMap == null)
+        {
+            return brickList;
+        }
+        for (Map.Entry<String, JSONArray> brickEntry : brickMap.entrySet())
+        {
+            JSONArray brickData = brickEntry.getValue();
+            if (brickData != null && brickData.size() >= 3)
+            {
+                BrkBricksBrick brick = new BrkBricksBrick();
+                brick.setBrickIndex(Integer.parseInt(brickEntry.getKey()));
+                brick.setPartNumber(String.valueOf(brickData.get(0)));
+                brick.setColorId(String.valueOf(brickData.get(1)));
+
+                Object transformObj = brickData.get(2);
+                if (transformObj instanceof JSONArray)
+                {
+                    JSONArray transform = (JSONArray) transformObj;
+                    if (transform.size() >= 12)
+                    {
+                        brick.setX(parseBigDecimal(transform.get(0)));
+                        brick.setY(parseBigDecimal(transform.get(1)));
+                        brick.setZ(parseBigDecimal(transform.get(2)));
+                        brick.setM11(parseBigDecimal(transform.get(3)));
+                        brick.setM12(parseBigDecimal(transform.get(4)));
+                        brick.setM13(parseBigDecimal(transform.get(5)));
+                        brick.setM21(parseBigDecimal(transform.get(6)));
+                        brick.setM22(parseBigDecimal(transform.get(7)));
+                        brick.setM23(parseBigDecimal(transform.get(8)));
+                        brick.setM31(parseBigDecimal(transform.get(9)));
+                        brick.setM32(parseBigDecimal(transform.get(10)));
+                        brick.setM33(parseBigDecimal(transform.get(11)));
+                    }
+                }
+                brickList.add(brick);
+            }
+        }
+        return brickList;
+    }
+
+    private void buildAndSetBricksDetails(BrkBricks brkBricks, HairData.ModelData modelData, String meshOriginId)
+    {
+        if (modelData == null || modelData.getInstance() == null)
+        {
+            return;
+        }
+        brkBricks.setBricks(parseBrickList(modelData.getInstance().getBrick()));
+        brkBricks.setConnpoints(parseConnpointsFromJSONArray(modelData.getInstance().getConnpoint()));
+        brkBricks.setGroups(parseGroupsFromJSONArray(modelData.getInstance().getGroup()));
+    }
+
+    private void insertBrkBricksWithMeshes(BrkBricks brkBricks, HairData.ModelData modelData, String meshOriginId)
+    {
+        brkBricksService.insertBrkBricks(brkBricks);
+
+        List<BrkBricksMesh> meshList = new ArrayList<>();
+        if (modelData != null && modelData.getInstance() != null)
+        {
+            Map<String, Object> meshMap = modelData.getInstance().getMesh();
+            if (meshMap != null && !meshMap.isEmpty())
+            {
+                meshList = parseHairMeshes(meshMap, meshOriginId);
+            }
+        }
+        if (!meshList.isEmpty())
+        {
+            for (BrkBricksMesh mesh : meshList)
+            {
+                mesh.setBricksId(brkBricks.getBricksId());
+            }
+            brkBricksMapper.batchBrkBricksMesh(meshList);
+        }
+    }
+
     /**
      * Save bricks models from config.asset_info to brk_bricks tables
      *
@@ -743,87 +965,12 @@ public class BrkResourceServiceImpl implements IBrkResourceService
                 brkBricks.setOriginUrl(assetUrl);
                 brkBricks.setCreateTime(DateUtils.getNowDate());
 
-                List<BrkBricksBrick> brickList = new ArrayList<>();
-                if (modelData != null && modelData.getInstance() != null)
-                {
-                    Map<String, JSONArray> brickMap = modelData.getInstance().getBrick();
-                    if (brickMap != null)
-                    {
-                        for (Map.Entry<String, JSONArray> brickEntry : brickMap.entrySet())
-                        {
-                            JSONArray brickData = brickEntry.getValue();
-                            if (brickData != null && brickData.size() >= 3)
-                            {
-                                BrkBricksBrick brick = new BrkBricksBrick();
-                                brick.setBrickIndex(Integer.parseInt(brickEntry.getKey()));
-                                brick.setPartNumber(String.valueOf(brickData.get(0)));
-                                brick.setColorId(String.valueOf(brickData.get(1)));
-
-                                Object transformObj = brickData.get(2);
-                                if (transformObj instanceof JSONArray)
-                                {
-                                    JSONArray transform = (JSONArray) transformObj;
-                                    if (transform.size() >= 12)
-                                    {
-                                        brick.setX(parseBigDecimal(transform.get(0)));
-                                        brick.setY(parseBigDecimal(transform.get(1)));
-                                        brick.setZ(parseBigDecimal(transform.get(2)));
-                                        brick.setM11(parseBigDecimal(transform.get(3)));
-                                        brick.setM12(parseBigDecimal(transform.get(4)));
-                                        brick.setM13(parseBigDecimal(transform.get(5)));
-                                        brick.setM21(parseBigDecimal(transform.get(6)));
-                                        brick.setM22(parseBigDecimal(transform.get(7)));
-                                        brick.setM23(parseBigDecimal(transform.get(8)));
-                                        brick.setM31(parseBigDecimal(transform.get(9)));
-                                        brick.setM32(parseBigDecimal(transform.get(10)));
-                                        brick.setM33(parseBigDecimal(transform.get(11)));
-                                    }
-                                }
-                                brickList.add(brick);
-                            }
-                        }
-                    }
-                }
-
-                List<BrkBricksConnpoint> connpointList = new ArrayList<>();
-                if (modelData != null && modelData.getInstance() != null)
-                {
-                    connpointList = parseConnpointsFromJSONArray(modelData.getInstance().getConnpoint());
-                }
-
-                brkBricks.setBricks(brickList);
-                brkBricks.setConnpoints(connpointList);
-
-                List<BrkBricksMesh> meshList = new ArrayList<>();
-                if (modelData != null && modelData.getInstance() != null)
-                {
-                    Map<String, Object> meshMap = modelData.getInstance().getMesh();
-                    if (meshMap != null && !meshMap.isEmpty())
-                    {
-                        meshList = parseHairMeshes(meshMap, originId);
-                    }
-                }
-
-                List<BrkBricksGroup> groupList = new ArrayList<>();
-                if (modelData != null && modelData.getInstance() != null)
-                {
-                    groupList = parseGroupsFromJSONArray(modelData.getInstance().getGroup());
-                }
-
-                brkBricks.setGroups(groupList);
-                brkBricksService.insertBrkBricks(brkBricks);
-
-                if (!meshList.isEmpty())
-                {
-                    for (BrkBricksMesh mesh : meshList)
-                    {
-                        mesh.setBricksId(brkBricks.getBricksId());
-                    }
-                    brkBricksMapper.batchBrkBricksMesh(meshList);
-                }
+                buildAndSetBricksDetails(brkBricks, modelData, originId);
+                insertBrkBricksWithMeshes(brkBricks, modelData, originId);
 
                 insertCount++;
-                log.info("Inserted bricks model: {} with {} bricks, {} connpoints, {} meshes", originId, brickList.size(), connpointList.size(), meshList.size());
+                log.info("Inserted bricks model: {} with {} bricks, {} connpoints, {} meshes", originId,
+                    brkBricks.getBricks().size(), brkBricks.getConnpoints().size(), brkBricks.getBricksId());
             }
 
             log.info("Bricks processing completed - Insert: {}, Skip: {}", insertCount, skipCount);
@@ -890,6 +1037,37 @@ public class BrkResourceServiceImpl implements IBrkResourceService
      *
      * @param libraryInfo Library configuration object
      */
+    private boolean isInBiYeKuAssets(LibraryInfo libraryInfo, String assetUrl)
+    {
+        if (libraryInfo.getTabsV2() == null || libraryInfo.getTabsV2().getLabels() == null)
+        {
+            return false;
+        }
+        for (LibraryInfo.TabLabel label : libraryInfo.getTabsV2().getLabels())
+        {
+            if (!"服装".equals(label.getName()))
+            {
+                continue;
+            }
+            if (label.getLabels() == null)
+            {
+                continue;
+            }
+            for (LibraryInfo.TabLabel subLabel : label.getLabels())
+            {
+                if (!"毕业款".equals(subLabel.getName()))
+                {
+                    continue;
+                }
+                if (subLabel.getAssets() != null && subLabel.getAssets().contains(assetUrl))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private void saveSetModels(LibraryInfo libraryInfo)
     {
         try
@@ -945,6 +1123,12 @@ public class BrkResourceServiceImpl implements IBrkResourceService
                 brkSet.setOriginId(originId);
                 brkSet.setOriginUrl(assetUrl);
                 brkSet.setCreateTime(DateUtils.getNowDate());
+
+                if (isInBiYeKuAssets(libraryInfo, assetUrl))
+                {
+                    brkSet.setLabel("服装");
+                    brkSet.setSublabel("毕业款");
+                }
 
                 List<BrkSetCategory> categoryList = new ArrayList<>();
 
@@ -1074,7 +1258,7 @@ public class BrkResourceServiceImpl implements IBrkResourceService
                     if ((category.getBrickData() != null && !category.getBrickData().isEmpty()) ||
                         (category.getMeshes() != null && !category.getMeshes().isEmpty()))
                     {
-                        saveSetCategoryAsBricks(originId, category, assetUrl);
+                        saveSetCategoryAsBricks(originId, category, assetUrl, categoryList);
                     }
                     category.setBrickData(null);
                 }
@@ -1091,7 +1275,7 @@ public class BrkResourceServiceImpl implements IBrkResourceService
     /**
      * Save set category as brk_bricks entry
      */
-    private void saveSetCategoryAsBricks(String setOriginId, BrkSetCategory category, String assetUrl)
+    private void saveSetCategoryAsBricks(String setOriginId, BrkSetCategory category, String assetUrl, List<BrkSetCategory> allCategories)
     {
         try
         {
@@ -1193,6 +1377,27 @@ public class BrkResourceServiceImpl implements IBrkResourceService
             brkBricks.setConnpoints(category.getConnpoints());
             brkBricks.setGroups(category.getGroups());
             brkBricksService.insertBrkBricks(brkBricks);
+
+            if ("tops".equals(category.getCategoryName()))
+            {
+                for (BrkSetCategory other : allCategories)
+                {
+                    if ("tops_handheld".equals(other.getCategoryName()) && other.getUuid() != null)
+                    {
+                        try
+                        {
+                            brkBricks.setHandheld(other.getUuid());
+                            brkBricksMapper.updateBrkBricks(brkBricks);
+                            log.info("Set handheld uuid {} for tops category: {}", other.getUuid(), bricksName);
+                        }
+                        catch (Exception e)
+                        {
+                            log.error("Failed to update handheld for tops category: {}", bricksName, e);
+                        }
+                        break;
+                    }
+                }
+            }
 
             log.info("Inserted bricks for category: {} with {} bricks, {} connpoints", bricksName, brickList.size(), category.getConnpoints() != null ? category.getConnpoints().size() : 0);
         }

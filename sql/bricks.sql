@@ -57,6 +57,8 @@ create table brk_set (
   set_name            varchar(500)    not null                   comment '套装名称',
   uuid               varchar(256)    default null               comment '套装UUID',
   asset_type         varchar(50)     not null                   comment '资产类型(套装)',
+  label              varchar(64)       default null               comment '标签',
+  sublabel           varchar(64)       default null               comment '子标签',
   origin_id          varchar(500)                               comment '原始ID',
   origin_url         varchar(500)                               comment '原始链接',
   comments           varchar(1024)                              comment '备注',
@@ -124,6 +126,8 @@ create table brk_bricks (
   uuid               varchar(256)     not null                   comment '模型UUID',
   asset_type         varchar(50)     not null                   comment '资产类型',
   category           varchar(50)     not null                   comment '分类(hair/body/shoes等)',
+  label              varchar(64)       default null               comment '标签',
+  sublabel           varchar(64)       default null               comment '子标签',
   diy_group          varchar(50)     default null               comment 'DIY分组',
   root_group         int             default null               comment '根分组ID',
   default_color      int             default null               comment '默认颜色ID',
@@ -131,6 +135,7 @@ create table brk_bricks (
   origin_url         varchar(500)                               comment '原始链接',
   comments           varchar(1024)                              comment '备注',
   preview_img        mediumtext                                 comment '预览图(base64)',
+  handheld            varchar(256)      default null            comment '手持形态模型uuid',
   create_by          varchar(64)     default ''                 comment '创建者',
   create_time        datetime                                   comment '创建时间',
   update_by          varchar(64)     default ''                 comment '更新者',
@@ -140,7 +145,6 @@ create table brk_bricks (
   key idx_origin_id (origin_id),
   key idx_category (category)
 ) engine=innodb auto_increment=1 comment = '积木模型表';
-
 
 -- ----------------------------
 -- Table structure for brk_bricks_brick (积木模型积木表)
@@ -223,7 +227,7 @@ create table brk_bricks_group (
   group_id            bigint(20)      not null auto_increment    comment '分组ID',
   bricks_id           bigint(20)      not null                   comment '积木模型ID',
   group_index         int             not null                   comment '分组索引',
-  group_name          varchar(50)     not null                   comment '分组名称',
+  group_name          varchar(200)     not null                   comment '分组名称',
   ref_id              varchar(500)                               comment '引用ID',
   x                   decimal(10,4)   not null                   comment 'X坐标',
   y                   decimal(10,4)   not null                   comment 'Y坐标',

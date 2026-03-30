@@ -71,8 +71,20 @@ public class BrkBricks extends BaseEntity
     /** LDR数据 */
     private List<String> ldrData;
 
+    /** 标签 */
+    @Excel(name = "标签")
+    private String label;
+
+    /** 子标签 */
+    @Excel(name = "子标签")
+    private String sublabel;
+
     /** 预览图(base64) */
     private String previewImg;
+
+    /** 手持形态模型UUID */
+    @Excel(name = "手持形态模型UUID")
+    private String handheld;
 
     public void setBricksId(Long bricksId) 
     {
@@ -224,6 +236,26 @@ public class BrkBricks extends BaseEntity
         this.ldrData = ldrData;
     }
 
+    public String getLabel()
+    {
+        return label;
+    }
+
+    public void setLabel(String label)
+    {
+        this.label = label;
+    }
+
+    public String getSublabel()
+    {
+        return sublabel;
+    }
+
+    public void setSublabel(String sublabel)
+    {
+        this.sublabel = sublabel;
+    }
+
     public String getPreviewImg()
     {
         return previewImg;
@@ -232,6 +264,16 @@ public class BrkBricks extends BaseEntity
     public void setPreviewImg(String previewImg)
     {
         this.previewImg = previewImg;
+    }
+
+    public String getHandheld()
+    {
+        return handheld;
+    }
+
+    public void setHandheld(String handheld)
+    {
+        this.handheld = handheld;
     }
 
     @Override
@@ -248,6 +290,8 @@ public class BrkBricks extends BaseEntity
             .append("originId", getOriginId())
             .append("originUrl", getOriginUrl())
         .append("comments", getComments())
+        .append("label", getLabel())
+        .append("sublabel", getSublabel())
         .append("createBy", getCreateBy())
         .append("createTime", getCreateTime())
         .append("updateBy", getUpdateBy())

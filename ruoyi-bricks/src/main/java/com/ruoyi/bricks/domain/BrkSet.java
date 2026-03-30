@@ -51,6 +51,14 @@ public class BrkSet extends BaseEntity
     /** 预览图(base64) */
     private String previewImg;
 
+    /** 标签 */
+    @Excel(name = "标签")
+    private String label;
+
+    /** 子标签 */
+    @Excel(name = "子标签")
+    private String sublabel;
+
     public void setSetId(Long setId) 
     {
         this.setId = setId;
@@ -149,6 +157,26 @@ public class BrkSet extends BaseEntity
     public void setPreviewImg(String previewImg)
     {
         this.previewImg = previewImg;
+    }
+
+    public String getLabel()
+    {
+        return label;
+    }
+
+    public void setLabel(String label)
+    {
+        this.label = label;
+    }
+
+    public String getSublabel()
+    {
+        return sublabel;
+    }
+
+    public void setSublabel(String sublabel)
+    {
+        this.sublabel = sublabel;
     }
 
     @Override
