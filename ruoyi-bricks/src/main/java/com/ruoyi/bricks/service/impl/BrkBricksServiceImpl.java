@@ -363,7 +363,7 @@ public class BrkBricksServiceImpl implements IBrkBricksService
             if (removeAbnormalParts && processedBrick.getPartNumber() != null)
             {
                 String partNumber = processedBrick.getPartNumber();
-                if (partNumber.contains("_") || partNumber.startsWith("qm") || partNumber.startsWith("qz"))
+                if (partNumber.contains("_"))
                 {
                     continue;
                 }
