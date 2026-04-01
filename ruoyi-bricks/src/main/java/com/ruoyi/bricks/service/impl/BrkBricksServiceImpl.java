@@ -208,26 +208,33 @@ public class BrkBricksServiceImpl implements IBrkBricksService
     @Override
     public List<String> generateLdrContent(Long bricksId, boolean replaceDefaultColor, boolean useOriginalParts, boolean removeAbnormalParts)
     {
-        return generateLdrContent(bricksId, replaceDefaultColor, useOriginalParts, removeAbnormalParts, null, null, null, false);
+        return generateLdrContent(bricksId, replaceDefaultColor, useOriginalParts, removeAbnormalParts, true);
     }
 
     @Override
     public List<String> generateLdrContent(Long bricksId, boolean replaceDefaultColor, boolean useOriginalParts, boolean removeAbnormalParts,
-            boolean translateByGroup)
+            boolean replaceCustomGroup)
     {
-        return generateLdrContent(bricksId, replaceDefaultColor, useOriginalParts, removeAbnormalParts, null, null, null, translateByGroup);
+        return generateLdrContent(bricksId, replaceDefaultColor, useOriginalParts, removeAbnormalParts, null, null, null, false, replaceCustomGroup);
     }
 
     @Override
     public List<String> generateLdrContent(Long bricksId, boolean replaceDefaultColor, boolean useOriginalParts, boolean removeAbnormalParts,
             Double offsetX, Double offsetY, Double offsetZ)
     {
-        return generateLdrContent(bricksId, replaceDefaultColor, useOriginalParts, removeAbnormalParts, offsetX, offsetY, offsetZ, false);
+        return generateLdrContent(bricksId, replaceDefaultColor, useOriginalParts, removeAbnormalParts, offsetX, offsetY, offsetZ, false, true);
     }
 
     @Override
     public List<String> generateLdrContent(Long bricksId, boolean replaceDefaultColor, boolean useOriginalParts, boolean removeAbnormalParts,
             Double offsetX, Double offsetY, Double offsetZ, boolean translateByGroup)
+    {
+        return generateLdrContent(bricksId, replaceDefaultColor, useOriginalParts, removeAbnormalParts, offsetX, offsetY, offsetZ, translateByGroup, true);
+    }
+
+    @Override
+    public List<String> generateLdrContent(Long bricksId, boolean replaceDefaultColor, boolean useOriginalParts, boolean removeAbnormalParts,
+            Double offsetX, Double offsetY, Double offsetZ, boolean translateByGroup, boolean replaceCustomGroup)
     {
         List<String> lines = new ArrayList<>();
         BrkBricks bricks = selectBrkBricksByBricksId(bricksId);
@@ -295,6 +302,91 @@ public class BrkBricksServiceImpl implements IBrkBricksService
             lines.add("0 Comment: Generated from brk_bricks");
         } else {
             lines.add("");
+        }
+
+        List<BrkBricksBrick> customGroupBricks = new ArrayList<>();
+        if (replaceCustomGroup && "hair".equals(bricks.getCategory()))
+        {
+            BrkBricks customModel = selectBrkBricksByBricksId(100000000L);
+            if (customModel != null && customModel.getBricks() != null)
+            {
+                double ref3022X = 0.0, ref3022Y = 0.0, ref3022Z = 0.0;
+                double refQzX = 0.0, refQzY = 0.0, refQzZ = 0.0;
+                boolean found3022 = false, foundQz = false;
+
+                for (BrkBricksBrick cb : customModel.getBricks())
+                {
+                    if (cb.getPartNumber() != null && !found3022 && "3022".equals(cb.getPartNumber()))
+                    {
+                        ref3022X = cb.getX() != null ? cb.getX().doubleValue() : 0.0;
+                        ref3022Y = cb.getY() != null ? cb.getY().doubleValue() : 0.0;
+                        ref3022Z = cb.getZ() != null ? cb.getZ().doubleValue() : 0.0;
+                        found3022 = true;
+                    }
+                }
+
+                for (BrkBricksBrick ob : bricks.getBricks())
+                {
+                    if (ob.getPartNumber() != null && !foundQz && "qz98701".equals(ob.getPartNumber()))
+                    {
+                        refQzX = ob.getX() != null ? ob.getX().doubleValue() : 0.0;
+                        refQzY = ob.getY() != null ? ob.getY().doubleValue() : 0.0;
+                        refQzZ = ob.getZ() != null ? ob.getZ().doubleValue() : 0.0;
+                        foundQz = true;
+                    }
+                }
+
+                if (found3022 && foundQz)
+                {
+                    double newPosX = refQzX - ref3022X;
+                    double newPosY = refQzY - ref3022Y;
+                    double newPosZ = refQzZ - ref3022Z;
+                    double translateX = newPosX - ref3022X;
+                    double translateY = newPosY - ref3022Y;
+                    double translateZ = newPosZ - ref3022Z;
+
+                    for (BrkBricksBrick customBrick : customModel.getBricks())
+                    {
+                        BrkBricksBrick translated = new BrkBricksBrick();
+                        BeanUtils.copyBeanProp(translated, customBrick);
+                        if (translated.getX() != null) translated.setX(translated.getX().add(java.math.BigDecimal.valueOf(translateX)));
+                        if (translated.getY() != null) translated.setY(translated.getY().add(java.math.BigDecimal.valueOf(translateY)));
+                        if (translated.getZ() != null) translated.setZ(translated.getZ().add(java.math.BigDecimal.valueOf(translateZ)));
+                        customGroupBricks.add(translated);
+                    }
+                }
+                else
+                {
+                    customGroupBricks.addAll(customModel.getBricks());
+                }
+            }
+        }
+
+        java.util.Set<Integer> conflictingBrickIndices = new java.util.HashSet<>();
+        if (replaceCustomGroup && !customGroupBricks.isEmpty())
+        {
+            for (BrkBricksBrick originalBrick : bricks.getBricks())
+            {
+                if (originalBrick.getPartNumber() != null && "3023".equals(originalBrick.getPartNumber()))
+                {
+                    double ox = originalBrick.getX() != null ? originalBrick.getX().doubleValue() : 0.0;
+                    double oy = originalBrick.getY() != null ? originalBrick.getY().doubleValue() : 0.0;
+                    double oz = originalBrick.getZ() != null ? originalBrick.getZ().doubleValue() : 0.0;
+
+                    for (BrkBricksBrick customBrick : customGroupBricks)
+                    {
+                        double cx = customBrick.getX() != null ? customBrick.getX().doubleValue() : 0.0;
+                        double cy = customBrick.getY() != null ? customBrick.getY().doubleValue() : 0.0;
+                        double cz = customBrick.getZ() != null ? customBrick.getZ().doubleValue() : 0.0;
+
+                        if (Math.abs(ox - cx) < 1.0 && Math.abs(oy - cy) < 1.0 && Math.abs(oz - cz) < 1.0)
+                        {
+                            conflictingBrickIndices.add(originalBrick.getBrickIndex());
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         for (BrkBricksBrick brick : bricks.getBricks())
@@ -369,6 +461,19 @@ public class BrkBricksServiceImpl implements IBrkBricksService
                 }
             }
 
+            if (replaceCustomGroup)
+            {
+                if (processedBrick.getPartNumber() != null &&
+                    ("qz98701".equals(processedBrick.getPartNumber()) || "qz98702".equals(processedBrick.getPartNumber())))
+                {
+                    continue;
+                }
+                if (conflictingBrickIndices.contains(brick.getBrickIndex()))
+                {
+                    continue;
+                }
+            }
+
             double x = (brick.getX() != null ? brick.getX().doubleValue() : 0.0) + totalOffsetX;
             double y = (brick.getY() != null ? brick.getY().doubleValue() : 0.0) + totalOffsetY;
             double z = (brick.getZ() != null ? brick.getZ().doubleValue() : 0.0) + totalOffsetZ;
@@ -388,6 +493,32 @@ public class BrkBricksServiceImpl implements IBrkBricksService
                     processedBrick.getPartNumber() != null ? processedBrick.getPartNumber() : "");
 
             lines.add(ldrLine);
+        }
+
+        if (!customGroupBricks.isEmpty())
+        {
+            for (BrkBricksBrick customBrick : customGroupBricks)
+            {
+                double x = (customBrick.getX() != null ? customBrick.getX().doubleValue() : 0.0) + totalOffsetX;
+                double y = (customBrick.getY() != null ? customBrick.getY().doubleValue() : 0.0) + totalOffsetY;
+                double z = (customBrick.getZ() != null ? customBrick.getZ().doubleValue() : 0.0) + totalOffsetZ;
+
+                String ldrLine = String.format("1 %s %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %s.dat",
+                        customBrick.getColorId() != null ? customBrick.getColorId() : "0",
+                        x, y, z,
+                        customBrick.getM11() != null ? customBrick.getM11().doubleValue() : 1.0,
+                        customBrick.getM12() != null ? customBrick.getM12().doubleValue() : 0.0,
+                        customBrick.getM13() != null ? customBrick.getM13().doubleValue() : 0.0,
+                        customBrick.getM21() != null ? customBrick.getM21().doubleValue() : 0.0,
+                        customBrick.getM22() != null ? customBrick.getM22().doubleValue() : 1.0,
+                        customBrick.getM23() != null ? customBrick.getM23().doubleValue() : 0.0,
+                        customBrick.getM31() != null ? customBrick.getM31().doubleValue() : 0.0,
+                        customBrick.getM32() != null ? customBrick.getM32().doubleValue() : 0.0,
+                        customBrick.getM33() != null ? customBrick.getM33().doubleValue() : 1.0,
+                        customBrick.getPartNumber() != null ? customBrick.getPartNumber() : "");
+
+                lines.add(ldrLine);
+            }
         }
 
         return lines;

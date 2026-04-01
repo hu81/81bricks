@@ -80,9 +80,10 @@ public class BrkBricksController extends BaseController
             @PathVariable("bricksId") Long bricksId,
             @RequestParam(value = "replaceDefaultColor", defaultValue = "true") boolean replaceDefaultColor,
             @RequestParam(value = "useOriginalParts", defaultValue = "true") boolean useOriginalParts,
-            @RequestParam(value = "removeAbnormalParts", defaultValue = "false") boolean removeAbnormalParts)
+            @RequestParam(value = "removeAbnormalParts", defaultValue = "false") boolean removeAbnormalParts,
+            @RequestParam(value = "replaceCustomGroup", defaultValue = "true") boolean replaceCustomGroup)
     {
-        List<String> ldrContent = brkBricksService.generateLdrContent(bricksId, replaceDefaultColor, useOriginalParts, removeAbnormalParts);
+        List<String> ldrContent = brkBricksService.generateLdrContent(bricksId, replaceDefaultColor, useOriginalParts, removeAbnormalParts, replaceCustomGroup);
         return AjaxResult.success("操作成功", ldrContent);
     }
 

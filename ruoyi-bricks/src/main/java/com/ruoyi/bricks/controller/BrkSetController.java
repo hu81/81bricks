@@ -55,9 +55,10 @@ public class BrkSetController extends BaseController
             @RequestParam(value = "replaceDefaultColor", defaultValue = "true") boolean replaceDefaultColor,
             @RequestParam(value = "useOriginalParts", defaultValue = "true") boolean useOriginalParts,
             @RequestParam(value = "removeAbnormalParts", defaultValue = "false") boolean removeAbnormalParts,
-            @RequestParam(value = "includeHandheld", defaultValue = "false") boolean includeHandheld)
+            @RequestParam(value = "includeHandheld", defaultValue = "false") boolean includeHandheld,
+            @RequestParam(value = "replaceCustomGroup", defaultValue = "true") boolean replaceCustomGroup)
     {
-        List<String> ldrContent = brkSetService.generateSetLdrContent(setId, replaceDefaultColor, useOriginalParts, removeAbnormalParts, includeHandheld);
+        List<String> ldrContent = brkSetService.generateSetLdrContent(setId, replaceDefaultColor, useOriginalParts, removeAbnormalParts, includeHandheld, replaceCustomGroup);
         return AjaxResult.success("操作成功", ldrContent);
     }
 

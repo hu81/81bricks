@@ -179,11 +179,17 @@ public class BrkSetServiceImpl implements IBrkSetService
     @Override
     public List<String> generateSetLdrContent(Long setId, boolean replaceDefaultColor, boolean useOriginalParts, boolean removeAbnormalParts)
     {
-        return generateSetLdrContent(setId, replaceDefaultColor, useOriginalParts, removeAbnormalParts, false);
+        return generateSetLdrContent(setId, replaceDefaultColor, useOriginalParts, removeAbnormalParts, false, true);
     }
 
     @Override
     public List<String> generateSetLdrContent(Long setId, boolean replaceDefaultColor, boolean useOriginalParts, boolean removeAbnormalParts, boolean includeHandheld)
+    {
+        return generateSetLdrContent(setId, replaceDefaultColor, useOriginalParts, removeAbnormalParts, includeHandheld, true);
+    }
+
+    @Override
+    public List<String> generateSetLdrContent(Long setId, boolean replaceDefaultColor, boolean useOriginalParts, boolean removeAbnormalParts, boolean includeHandheld, boolean replaceCustomGroup)
     {
         List<String> mergedLines = new ArrayList<>();
 
@@ -222,7 +228,7 @@ public class BrkSetServiceImpl implements IBrkSetService
             rootModel = categoryModels.values().iterator().next().get(0);
         }
 
-        mergedLines.addAll(brkBricksService.generateLdrContent(rootModel.getBricksId(), replaceDefaultColor, useOriginalParts, removeAbnormalParts, true));
+        mergedLines.addAll(brkBricksService.generateLdrContent(rootModel.getBricksId(), replaceDefaultColor, useOriginalParts, removeAbnormalParts, null, null, null, true, replaceCustomGroup));
         processedModels.put(rootModel.getCategory(), rootModel);
 
         Map<String, double[]> cumulativeOffsets = new HashMap<>();
@@ -272,7 +278,7 @@ public class BrkSetServiceImpl implements IBrkSetService
                     double totalOffsetY = parentOffsetY + offsetY;
                     double totalOffsetZ = parentOffsetZ + offsetZ;
 
-                    mergedLines.addAll(brkBricksService.generateLdrContent(childModel.getBricksId(), replaceDefaultColor, useOriginalParts, removeAbnormalParts, totalOffsetX, totalOffsetY, totalOffsetZ, true));
+                    mergedLines.addAll(brkBricksService.generateLdrContent(childModel.getBricksId(), replaceDefaultColor, useOriginalParts, removeAbnormalParts, totalOffsetX, totalOffsetY, totalOffsetZ, true, replaceCustomGroup));
                     processedModels.put(childModel.getCategory(), childModel);
                     cumulativeOffsets.put(childModel.getCategory(), new double[]{totalOffsetX, totalOffsetY, totalOffsetZ});
                 }
