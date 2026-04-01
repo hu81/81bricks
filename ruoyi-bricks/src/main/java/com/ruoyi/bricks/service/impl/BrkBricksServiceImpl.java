@@ -362,33 +362,6 @@ public class BrkBricksServiceImpl implements IBrkBricksService
             }
         }
 
-        java.util.Set<Integer> conflictingBrickIndices = new java.util.HashSet<>();
-        if (replaceCustomGroup && !customGroupBricks.isEmpty())
-        {
-            for (BrkBricksBrick originalBrick : bricks.getBricks())
-            {
-                if (originalBrick.getPartNumber() != null && "3023".equals(originalBrick.getPartNumber()))
-                {
-                    double ox = originalBrick.getX() != null ? originalBrick.getX().doubleValue() : 0.0;
-                    double oy = originalBrick.getY() != null ? originalBrick.getY().doubleValue() : 0.0;
-                    double oz = originalBrick.getZ() != null ? originalBrick.getZ().doubleValue() : 0.0;
-
-                    for (BrkBricksBrick customBrick : customGroupBricks)
-                    {
-                        double cx = customBrick.getX() != null ? customBrick.getX().doubleValue() : 0.0;
-                        double cy = customBrick.getY() != null ? customBrick.getY().doubleValue() : 0.0;
-                        double cz = customBrick.getZ() != null ? customBrick.getZ().doubleValue() : 0.0;
-
-                        if (Math.abs(ox - cx) < 1.0 && Math.abs(oy - cy) < 1.0 && Math.abs(oz - cz) < 1.0)
-                        {
-                            conflictingBrickIndices.add(originalBrick.getBrickIndex());
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
         for (BrkBricksBrick brick : bricks.getBricks())
         {
             BrkBricksBrick processedBrick = new BrkBricksBrick();
@@ -465,10 +438,6 @@ public class BrkBricksServiceImpl implements IBrkBricksService
             {
                 if (processedBrick.getPartNumber() != null &&
                     ("qz98701".equals(processedBrick.getPartNumber()) || "qz98702".equals(processedBrick.getPartNumber())))
-                {
-                    continue;
-                }
-                if (conflictingBrickIndices.contains(brick.getBrickIndex()))
                 {
                     continue;
                 }
