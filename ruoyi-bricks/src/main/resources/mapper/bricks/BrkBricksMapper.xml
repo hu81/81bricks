@@ -227,11 +227,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="textureTop"    column="texture_top"    />
         <result property="textureBack"    column="texture_back"    />
         <result property="textureBottom"    column="texture_bottom"    />
+        <result property="textureFront"    column="texture_front"    />
     </resultMap>
 
     <select id="selectBrkBricksMeshList" parameterType="Long" resultMap="BrkBricksMeshResult">
         select mesh_id, bricks_id, mesh_index, ref_id, part_number, base, mesh_type,
-               texture_left, texture_right, texture_top, texture_back, texture_bottom
+               texture_left, texture_right, texture_top, texture_back, texture_bottom, texture_front
         from brk_bricks_mesh
         where bricks_id = #{bricksId}
         order by mesh_index
@@ -239,10 +240,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <insert id="batchBrkBricksMesh">
         insert into brk_bricks_mesh( bricks_id, mesh_index, ref_id, part_number, base, mesh_type,
-            texture_left, texture_right, texture_top, texture_back, texture_bottom) values
+            texture_left, texture_right, texture_top, texture_back, texture_bottom, texture_front) values
         <foreach item="item" index="index" collection="list" separator=",">
             ( #{item.bricksId}, #{item.meshIndex}, #{item.refId}, #{item.partNumber}, #{item.base}, #{item.meshType},
-              #{item.textureLeft}, #{item.textureRight}, #{item.textureTop}, #{item.textureBack}, #{item.textureBottom})
+              #{item.textureLeft}, #{item.textureRight}, #{item.textureTop}, #{item.textureBack}, #{item.textureBottom}, #{item.textureFront})
         </foreach>
     </insert>
 

@@ -57,6 +57,9 @@ public class BrkSetMesh extends BaseEntity
     /** 底部纹理 */
     private String textureBottom;
 
+    /** 前面纹理 */
+    private String textureFront;
+
     public void setMeshId(Long meshId) 
     {
         this.meshId = meshId;
@@ -172,9 +175,19 @@ public class BrkSetMesh extends BaseEntity
         this.textureBottom = textureBottom;
     }
 
-    public String getTextureBottom() 
+    public String getTextureBottom()
     {
         return textureBottom;
+    }
+
+    public void setTextureFront(String textureFront)
+    {
+        this.textureFront = textureFront;
+    }
+
+    public String getTextureFront()
+    {
+        return textureFront;
     }
 
     @Override
@@ -192,6 +205,7 @@ public class BrkSetMesh extends BaseEntity
             .append("textureTop", getTextureTop())
             .append("textureBack", getTextureBack())
             .append("textureBottom", getTextureBottom())
+            .append("textureFront", getTextureFront())
             .append("createBy", getCreateBy())
             .append("createTime", getCreateTime())
             .toString();

@@ -39,6 +39,8 @@ public class BrkBricksMesh extends BaseEntity
 
     private String textureBottom;
 
+    private String textureFront;
+
     public void setMeshId(Long meshId) 
     {
         this.meshId = meshId;
@@ -159,6 +161,16 @@ public class BrkBricksMesh extends BaseEntity
         return textureBottom;
     }
 
+    public void setTextureFront(String textureFront)
+    {
+        this.textureFront = textureFront;
+    }
+
+    public String getTextureFront()
+    {
+        return textureFront;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
@@ -174,6 +186,7 @@ public class BrkBricksMesh extends BaseEntity
             .append("textureTop", getTextureTop())
             .append("textureBack", getTextureBack())
             .append("textureBottom", getTextureBottom())
+            .append("textureFront", getTextureFront())
             .toString();
     }
 }

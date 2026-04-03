@@ -57,6 +57,7 @@ public class BrkBricksServiceImpl implements IBrkBricksService
             bricks.setBricks(brkBricksMapper.selectBrkBricksBrickList(bricksId));
             bricks.setConnpoints(brkBricksMapper.selectBrkBricksConnpointList(bricksId));
             bricks.setGroups(brkBricksGroupMapper.selectBrkBricksGroupList(bricksId));
+            bricks.setMeshes(brkBricksMapper.selectBrkBricksMeshList(bricksId));
         }
         return bricks;
     }
@@ -70,6 +71,7 @@ public class BrkBricksServiceImpl implements IBrkBricksService
             bricks.setBricks(brkBricksMapper.selectBrkBricksBrickList(bricks.getBricksId()));
             bricks.setConnpoints(brkBricksMapper.selectBrkBricksConnpointList(bricks.getBricksId()));
             bricks.setGroups(brkBricksGroupMapper.selectBrkBricksGroupList(bricks.getBricksId()));
+            bricks.setMeshes(brkBricksMapper.selectBrkBricksMeshList(bricks.getBricksId()));
         }
         return bricks;
     }
@@ -98,6 +100,7 @@ public class BrkBricksServiceImpl implements IBrkBricksService
                 {
                     bricks.setBricks(brkBricksMapper.selectBrkBricksBrickList(bricks.getBricksId()));
                     bricks.setConnpoints(brkBricksMapper.selectBrkBricksConnpointList(bricks.getBricksId()));
+                    bricks.setMeshes(brkBricksMapper.selectBrkBricksMeshList(bricks.getBricksId()));
                     if (includeLdr)
                     {
                         bricks.setLdrData(generateLdrContent(bricks.getBricksId(), true, true, false));

@@ -190,7 +190,7 @@ public class BrkResourceServiceImpl implements IBrkResourceService
             if (libraryInfo.getTabsV2() != null && libraryInfo.getTabsV2().getLabels() != null)
             {
 //                saveResourceImages(libraryInfo);
-//                parseModelResource(libraryInfo);
+                parseModelResource(libraryInfo);
             }
 
             if (libraryInfo.getConfig() != null && libraryInfo.getConfig().getAssetInfo() != null)
@@ -1489,6 +1489,7 @@ public class BrkResourceServiceImpl implements IBrkResourceService
                     mesh.setTextureTop((String) texturesMap.get("top"));
                     mesh.setTextureBack((String) texturesMap.get("back"));
                     mesh.setTextureBottom((String) texturesMap.get("bottom"));
+                    mesh.setTextureFront((String) texturesMap.get("front"));
                 }
 
                 meshList.add(mesh);
@@ -1799,6 +1800,7 @@ public class BrkResourceServiceImpl implements IBrkResourceService
                     mesh.setTextureTop((String) texturesMap.get("top"));
                     mesh.setTextureBack((String) texturesMap.get("back"));
                     mesh.setTextureBottom((String) texturesMap.get("bottom"));
+                    mesh.setTextureFront((String) texturesMap.get("front"));
                 }
 
                 meshList.add(mesh);

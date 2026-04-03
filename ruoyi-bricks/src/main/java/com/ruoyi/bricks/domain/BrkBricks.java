@@ -71,6 +71,9 @@ public class BrkBricks extends BaseEntity
     /** LDR数据 */
     private List<String> ldrData;
 
+    /** 网格数据 */
+    private List<BrkBricksMesh> meshes;
+
     /** 标签 */
     @Excel(name = "标签")
     private String label;
@@ -234,6 +237,16 @@ public class BrkBricks extends BaseEntity
     public void setLdrData(List<String> ldrData)
     {
         this.ldrData = ldrData;
+    }
+
+    public List<BrkBricksMesh> getMeshes()
+    {
+        return meshes;
+    }
+
+    public void setMeshes(List<BrkBricksMesh> meshes)
+    {
+        this.meshes = meshes;
     }
 
     public String getLabel()
